@@ -1,18 +1,15 @@
-"""
-    Those are models related to channel sections.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
-from .base import BaseModel
-from .common import BaseResource, BaseApiResponse
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource
 
 
 @dataclass
-class ChannelSectionSnippet(BaseModel):
-    """
-    A class representing the channel section snippet info.
+class ChannelSectionSnippet(Serializable):
+    """A class representing the channel section snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/channelSections#snippet
     """
@@ -24,41 +21,32 @@ class ChannelSectionSnippet(BaseModel):
 
 
 @dataclass
-class ChannelSectionContentDetails(BaseModel):
-    """
-    A class representing the channel section content details info.
+class ChannelSectionContentDetails(Serializable):
+    """A class representing the channel section content details info.
 
     Refer: https://developers.google.com/youtube/v3/docs/channelSections#contentDetails
     """
 
-    playlists: Optional[List[str]] = field(default=None, repr=False)
-    channels: Optional[List[str]] = field(default=None)
+    playlists: Optional[list[str]] = field(default=None, repr=False)
+    channels: Optional[list[str]] = field(default=None)
 
 
 @dataclass
 class ChannelSection(BaseResource):
-    """
-    A class representing the channel section info.
+    """A class representing the channel section info.
 
     Refer: https://developers.google.com/youtube/v3/docs/channelSections#properties
     """
 
     snippet: Optional[ChannelSectionSnippet] = field(default=None, repr=False)
-    contentDetails: Optional[ChannelSectionContentDetails] = field(
-        default=None, repr=False
-    )
+    contentDetails: Optional[ChannelSectionContentDetails] = field(default=None, repr=False)
 
 
 @dataclass
-class ChannelSectionResponse(BaseApiResponse):
-    """
-    A class representing the channel section's retrieve response info.
+class ChannelSectionListResponse(BaseList):
+    """A class representing the channel section's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/channelSections/list?#properties_1
     """
 
-    items: Optional[List[ChannelSection]] = field(default=None, repr=False)
-
-
-@dataclass
-class ChannelSectionListResponse(ChannelSectionResponse): ...
+    items: list[ChannelSection] = field(repr=False)

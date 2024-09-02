@@ -1,19 +1,16 @@
-"""
-  These are subscription related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
-from .base import BaseModel
-from .common import BaseApiResponse, BaseResource, ResourceId, Thumbnails
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource, ResourceId, Thumbnails
 from .mixins import DatetimeTimeMixin
 
 
 @dataclass
-class SubscriptionSnippet(BaseModel, DatetimeTimeMixin):
-    """
-    A class representing the subscription snippet info.
+class SubscriptionSnippet(Serializable, DatetimeTimeMixin):
+    """A class representing the subscription snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/subscriptions#snippet
     """
@@ -28,9 +25,8 @@ class SubscriptionSnippet(BaseModel, DatetimeTimeMixin):
 
 
 @dataclass
-class SubscriptionContentDetails(BaseModel):
-    """
-    A class representing the subscription contentDetails info.
+class SubscriptionContentDetails(Serializable):
+    """A class representing the subscription contentDetails info.
 
     Refer: https://developers.google.com/youtube/v3/docs/subscriptions#contentDetails
     """
@@ -41,9 +37,8 @@ class SubscriptionContentDetails(BaseModel):
 
 
 @dataclass
-class SubscriptionSubscriberSnippet(BaseModel):
-    """
-    A class representing the subscription subscriberSnippet info.
+class SubscriptionSubscriberSnippet(Serializable):
+    """A class representing the subscription subscriberSnippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/subscriptions#subscriberSnippet
     """
@@ -56,27 +51,21 @@ class SubscriptionSubscriberSnippet(BaseModel):
 
 @dataclass
 class Subscription(BaseResource):
-    """
-    A class representing the subscription info.
+    """A class representing the subscription info.
 
     Refer: https://developers.google.com/youtube/v3/docs/subscriptions
     """
 
     snippet: Optional[SubscriptionSnippet] = field(default=None)
-    contentDetails: Optional[SubscriptionContentDetails] = field(
-        default=None, repr=False
-    )
-    subscriberSnippet: Optional[SubscriptionSubscriberSnippet] = field(
-        default=None, repr=False
-    )
+    contentDetails: Optional[SubscriptionContentDetails] = field(default=None, repr=False)
+    subscriberSnippet: Optional[SubscriptionSubscriberSnippet] = field(default=None, repr=False)
 
 
 @dataclass
-class SubscriptionListResponse(BaseApiResponse):
-    """
-    A class representing the subscription's retrieve response info.
+class SubscriptionListResponse(BaseList):
+    """A class representing the subscription's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/subscriptions/list#response_1
     """
 
-    items: Optional[List[Subscription]] = field(default=None, repr=False)
+    items: list[Subscription] = field(repr=False)

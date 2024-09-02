@@ -1,19 +1,16 @@
-"""
-    These are playlist related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional
 
-from .base import BaseModel
-from .common import BaseApiResponse, BaseResource, Localized, Player, Thumbnails
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource, Localized, Player, Thumbnails
 from .mixins import DatetimeTimeMixin
 
 
 @dataclass
-class PlaylistContentDetails(BaseModel):
-    """
-    A class representing playlist's content details info.
+class PlaylistContentDetails(Serializable):
+    """A class representing playlist's content details info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlists#contentDetails
     """
@@ -22,9 +19,8 @@ class PlaylistContentDetails(BaseModel):
 
 
 @dataclass
-class PlaylistSnippet(BaseModel, DatetimeTimeMixin):
-    """
-    A class representing the playlist snippet info.
+class PlaylistSnippet(Serializable, DatetimeTimeMixin):
+    """A class representing the playlist snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlists#snippet
     """
@@ -40,9 +36,8 @@ class PlaylistSnippet(BaseModel, DatetimeTimeMixin):
 
 
 @dataclass
-class PlaylistStatus(BaseModel):
-    """
-    A class representing the playlist status info.
+class PlaylistStatus(Serializable):
+    """A class representing the playlist status info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlists#status
     """
@@ -52,8 +47,7 @@ class PlaylistStatus(BaseModel):
 
 @dataclass
 class Playlist(BaseResource):
-    """
-    A class representing the playlist info.
+    """A class representing the playlist info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlists
     """
@@ -65,11 +59,10 @@ class Playlist(BaseResource):
 
 
 @dataclass
-class PlaylistListResponse(BaseApiResponse):
-    """
-    A class representing the playlist's retrieve response info.
+class PlaylistListResponse(BaseList):
+    """A class representing the playlist's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlists/list#response_1
     """
 
-    items: Optional[List[Playlist]] = field(default=None, repr=False)
+    items: list[Playlist] = field(repr=False)

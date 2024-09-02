@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.0 (2024-09-02)
+
+### Breaking Changes
+
+- Remove the old `API` module.
+- Remove all Resources methods except `list`. Only retrieval methods are supported.
+- Remove the `Media` and `MediaUpload` classes. Media upload functionality is removed.
+
+### What's New
+
+- Add new parameter `for_handle` to get channel by handle.
+- fix some wrong error message.
+
 ## Version 0.9.5 (2024-08-09)
 
 ### What's New
@@ -15,7 +28,7 @@ All notable changes to this project will be documented in this file.
 
 ### What's New
 
-- Add new parameter `for_handle` to get channel by handle.  
+- Add new parameter `for_handle` to get channel by handle.
 - fix some wrong error message.
 
 ## Version 0.9.3 (2023-11-22)
@@ -65,7 +78,7 @@ Detail at: https://developers.google.com/youtube/v3/revision_history#may-12,-202
 
 - Remove channel resource in brandingSettings for channel.
 - Remove localizations,targeting resource and some snippet resource for channelSection.
-- Remove tags in snippet for playlist. 
+- Remove tags in snippet for playlist.
 
 ### Broken Change
 

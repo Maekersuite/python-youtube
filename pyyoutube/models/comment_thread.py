@@ -1,17 +1,15 @@
-"""
-    These are comment threads related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional
 
-from .base import BaseModel
-from .common import BaseResource, BaseApiResponse
+from ..utils.serializable import Serializable
 from .comment import Comment
+from .common import BaseList, BaseResource
 
 
 @dataclass
-class CommentThreadSnippet(BaseModel):
+class CommentThreadSnippet(Serializable):
     """A class representing comment tread snippet info.
 
     References: https://developers.google.com/youtube/v3/docs/commentThreads#snippet
@@ -26,20 +24,18 @@ class CommentThreadSnippet(BaseModel):
 
 
 @dataclass
-class CommentThreadReplies(BaseModel):
-    """
-    A class representing comment tread replies info.
+class CommentThreadReplies(Serializable):
+    """A class representing comment tread replies info.
 
     Refer: https://developers.google.com/youtube/v3/docs/commentThreads#replies
     """
 
-    comments: Optional[List[Comment]] = field(default=None, repr=False)
+    comments: list[Comment] = field(repr=False)
 
 
 @dataclass
 class CommentThread(BaseResource):
-    """
-    A class representing comment thread info.
+    """A class representing comment thread info.
 
     Refer: https://developers.google.com/youtube/v3/docs/commentThreads
     """
@@ -49,11 +45,10 @@ class CommentThread(BaseResource):
 
 
 @dataclass
-class CommentThreadListResponse(BaseApiResponse):
-    """
-    A class representing the comment thread's retrieve response info.
+class CommentThreadListResponse(BaseList):
+    """A class representing the comment thread's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/commentThreads/list#response_1
     """
 
-    items: Optional[List[CommentThread]] = field(default=None, repr=False)
+    items: list[CommentThread] = field(repr=False)

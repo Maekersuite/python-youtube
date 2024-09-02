@@ -1,19 +1,16 @@
-"""
-    These are member related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
-from .base import BaseModel
-from .common import BaseApiResponse
+from ..utils.serializable import Serializable
+from .common import BaseList
 from .mixins import DatetimeTimeMixin
 
 
 @dataclass
-class MemberSnippetMemberDetails(BaseModel):
-    """
-    A class representing the member snippet member detail.
+class MemberSnippetMemberDetails(Serializable):
+    """A class representing the member snippet member detail.
 
     Refer: https://developers.google.com/youtube/v3/docs/members#snippet.memberDetails
     """
@@ -25,58 +22,51 @@ class MemberSnippetMemberDetails(BaseModel):
 
 
 @dataclass
-class MemberSnippetMembershipsDuration(BaseModel, DatetimeTimeMixin):
+class MemberSnippetMembershipsDuration(Serializable, DatetimeTimeMixin):
+    """A class representing the member snippet memberships duration."""
+
     memberSince: Optional[str] = field(default=None)
     memberTotalDurationMonths: Optional[int] = field(default=None, repr=False)
 
 
 @dataclass
-class MemberSnippetMembershipsDurationAtLevel(BaseModel):
+class MemberSnippetMembershipsDurationAtLevel(Serializable):
+    """A class representing the member snippet memberships duration at level."""
+
     level: Optional[str] = field(default=None)
     memberSince: Optional[str] = field(default=None, repr=False)
     memberTotalDurationMonths: Optional[int] = field(default=None, repr=False)
 
 
 @dataclass
-class MemberSnippetMembershipsDetails(BaseModel):
-    """
-    A class representing the member snippet membership detail.
+class MemberSnippetMembershipsDetails(Serializable):
+    """A class representing the member snippet membership detail.
 
     Refer: https://developers.google.com/youtube/v3/docs/members#snippet.membershipsDetails
     """
 
+    membershipsDurationAtLevel: list[MemberSnippetMembershipsDurationAtLevel] = field(repr=False)
+    accessibleLevels: Optional[list[str]] = field(default=None, repr=False)
+    membershipsDuration: Optional[MemberSnippetMembershipsDuration] = field(default=None, repr=False)
     highestAccessibleLevel: Optional[str] = field(default=None)
     highestAccessibleLevelDisplayName: Optional[str] = field(default=None)
-    accessibleLevels: Optional[List[str]] = field(default=None, repr=False)
-    membershipsDuration: Optional[MemberSnippetMembershipsDuration] = field(
-        default=None, repr=False
-    )
-    membershipsDurationAtLevel: Optional[
-        List[MemberSnippetMembershipsDurationAtLevel]
-    ] = field(default=None, repr=False)
 
 
 @dataclass
-class MemberSnippet(BaseModel):
-    """
-    A class representing the member snippet info.
+class MemberSnippet(Serializable):
+    """A class representing the member snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/members#snippet
     """
 
     creatorChannelId: Optional[str] = field(default=None)
-    memberDetails: Optional[MemberSnippetMemberDetails] = field(
-        default=None, repr=False
-    )
-    membershipsDetails: Optional[MemberSnippetMembershipsDetails] = field(
-        default=None, repr=False
-    )
+    memberDetails: Optional[MemberSnippetMemberDetails] = field(default=None, repr=False)
+    membershipsDetails: Optional[MemberSnippetMembershipsDetails] = field(default=None, repr=False)
 
 
 @dataclass
-class Member(BaseModel):
-    """
-    A class representing the member info.
+class Member(Serializable):
+    """A class representing the member info.
 
     Refer: https://developers.google.com/youtube/v3/docs/members
     """
@@ -87,11 +77,10 @@ class Member(BaseModel):
 
 
 @dataclass
-class MemberListResponse(BaseApiResponse):
-    """
-    A class representing the member's retrieve response info.
+class MemberListResponse(BaseList):
+    """A class representing the member's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/members/list#response
     """
 
-    items: Optional[List[Member]] = field(default=None, repr=False)
+    items: list[Member] = field(repr=False)

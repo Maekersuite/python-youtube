@@ -1,19 +1,16 @@
-"""
-    These are caption related models
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
-from .base import BaseModel
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource
 from .mixins import DatetimeTimeMixin
-from .common import BaseResource, BaseApiResponse
 
 
 @dataclass
-class CaptionSnippet(BaseModel, DatetimeTimeMixin):
-    """
-    A class representing the caption snippet resource info.
+class CaptionSnippet(Serializable, DatetimeTimeMixin):
+    """A class representing the caption snippet resource info.
 
     Refer: https://developers.google.com/youtube/v3/docs/captions#snippet
     """
@@ -35,8 +32,7 @@ class CaptionSnippet(BaseModel, DatetimeTimeMixin):
 
 @dataclass
 class Caption(BaseResource):
-    """
-    A class representing the caption resource info.
+    """A class representing the caption resource info.
 
     Refer: https://developers.google.com/youtube/v3/docs/captions
     """
@@ -45,11 +41,10 @@ class Caption(BaseResource):
 
 
 @dataclass
-class CaptionListResponse(BaseApiResponse):
-    """
-    A class representing the activity response info.
+class CaptionListResponse(BaseList):
+    """A class representing the activity response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/captions/list?#response_1
     """
 
-    items: Optional[List[Caption]] = field(default=None, repr=False)
+    items: list[Caption] = field(repr=False)

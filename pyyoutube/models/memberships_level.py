@@ -1,37 +1,31 @@
-"""
-    These are membership level related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
-from .base import BaseModel
-from .common import BaseResource, BaseApiResponse
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource
 
 
 @dataclass
-class MembershipLevelSnippetLevelDetails(BaseModel):
+class MembershipLevelSnippetLevelDetails(Serializable):  # noqa: D101
     displayName: Optional[str] = field(default=None)
 
 
 @dataclass
-class MembershipsLevelSnippet(BaseModel):
-    """
-    A class representing the membership level snippet.
+class MembershipsLevelSnippet(Serializable):
+    """A class representing the membership level snippet.
 
     Refer: https://developers.google.com/youtube/v3/docs/membershipsLevels#snippet
     """
 
     creatorChannelId: Optional[str] = field(default=None)
-    levelDetails: Optional[MembershipLevelSnippetLevelDetails] = field(
-        default=None, repr=False
-    )
+    levelDetails: Optional[MembershipLevelSnippetLevelDetails] = field(default=None, repr=False)
 
 
 @dataclass
 class MembershipsLevel(BaseResource):
-    """
-    A class representing the membership level.
+    """A class representing the membership level.
 
     Refer: https://developers.google.com/youtube/v3/docs/membershipsLevels
     """
@@ -40,11 +34,10 @@ class MembershipsLevel(BaseResource):
 
 
 @dataclass
-class MembershipsLevelListResponse(BaseApiResponse):
-    """
-    A class representing the memberships level's retrieve response info.
+class MembershipsLevelListResponse(BaseList):
+    """A class representing the memberships level's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/membershipsLevels/list#response
     """
 
-    items: Optional[List[MembershipsLevel]] = field(default=None, repr=False)
+    items: list[MembershipsLevel] = field(repr=False)

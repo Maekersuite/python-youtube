@@ -1,19 +1,16 @@
-"""
-    These are comment related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
-from .base import BaseModel
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource
 from .mixins import DatetimeTimeMixin
-from .common import BaseApiResponse, BaseResource
 
 
 @dataclass
-class CommentSnippetAuthorChannelId(BaseModel):
-    """
-    A class representing comment's snippet authorChannelId info.
+class CommentSnippetAuthorChannelId(Serializable):
+    """A class representing comment's snippet authorChannelId info.
 
     Refer: https://developers.google.com/youtube/v3/docs/comments#snippet.authorChannelId
     """
@@ -22,9 +19,8 @@ class CommentSnippetAuthorChannelId(BaseModel):
 
 
 @dataclass
-class CommentSnippet(BaseModel, DatetimeTimeMixin):
-    """
-    A class representing comment's snippet info.
+class CommentSnippet(Serializable, DatetimeTimeMixin):
+    """A class representing comment's snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/comments#snippet
     """
@@ -32,11 +28,8 @@ class CommentSnippet(BaseModel, DatetimeTimeMixin):
     authorDisplayName: Optional[str] = field(default=None)
     authorProfileImageUrl: Optional[str] = field(default=None, repr=False)
     authorChannelUrl: Optional[str] = field(default=None, repr=False)
-    authorChannelId: Optional[CommentSnippetAuthorChannelId] = field(
-        default=None, repr=False
-    )
+    authorChannelId: Optional[CommentSnippetAuthorChannelId] = field(default=None, repr=False)
     channelId: Optional[str] = field(default=None, repr=False)
-    # videoId has deprecated, see https://developers.google.com/youtube/v3/revision_history#november-09,-2023
     videoId: Optional[str] = field(default=None, repr=False)
     textDisplay: Optional[str] = field(default=None, repr=False)
     textOriginal: Optional[str] = field(default=None, repr=False)
@@ -51,8 +44,7 @@ class CommentSnippet(BaseModel, DatetimeTimeMixin):
 
 @dataclass
 class Comment(BaseResource):
-    """
-    A class representing comment info.
+    """A class representing comment info.
 
     Refer: https://developers.google.com/youtube/v3/docs/comments
     """
@@ -61,11 +53,10 @@ class Comment(BaseResource):
 
 
 @dataclass
-class CommentListResponse(BaseApiResponse):
-    """
-    A class representing the comment's retrieve response info.
+class CommentListResponse(BaseList):
+    """A class representing the comment's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/comments/list#response_1
     """
 
-    items: Optional[List[Comment]] = field(default=None, repr=False)
+    items: list[Comment] = field(repr=False)

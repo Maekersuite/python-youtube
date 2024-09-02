@@ -1,19 +1,18 @@
-from .activity import *  # noqa
-from .auth import AccessToken, UserProfile
-from .caption import *  # noqa
-from .category import *  # noqa
-from .channel import *  # noqa
-from .channel_banner import *  # noqa
-from .channel_section import *  # noqa
-from .comment import *  # noqa
-from .comment_thread import *  # noqa
-from .i18n import *  # noqa
-from .member import *  # noqa
-from .memberships_level import *  # noqa
-from .playlist_item import *  # noqa
-from .playlist import *  # noqa
-from .search_result import *  # noqa
-from .subscription import *  # noqa
-from .video_abuse_report_reason import *  # noqa
-from .video import *  # noqa
-from .watermark import *  # noqa
+# ruff: noqa: F403 - wildcard import for all models
+
+from .caption import *
+from .category import *
+from .channel import *
+from .channel_section import *
+from .comment import *
+from .comment_thread import *
+from .i18n import *
+from .member import *
+from .memberships_level import *
+from .playlist import *
+from .playlist_item import *
+from .search_result import *
+from .subscription import *
+from .video import *
+from .video_abuse_report_reason import *
+from .watermark import *

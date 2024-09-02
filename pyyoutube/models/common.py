@@ -1,17 +1,14 @@
-"""
-    These are common models for multi resource.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional
 
-from .base import BaseModel
+from ..utils.serializable import Serializable
 
 
 @dataclass
-class Thumbnail(BaseModel):
-    """
-    A class representing the thumbnail resource info.
+class Thumbnail(Serializable):
+    """A class representing the thumbnail resource info.
 
     Refer: https://developers.google.com/youtube/v3/docs/channels#snippet.thumbnails.(key).url
     """
@@ -22,9 +19,8 @@ class Thumbnail(BaseModel):
 
 
 @dataclass
-class Thumbnails(BaseModel):
-    """
-    A class representing the multi thumbnail resource info.
+class Thumbnails(Serializable):
+    """A class representing the multi thumbnail resource info.
 
     Refer: https://developers.google.com/youtube/v3/docs/channels#snippet.thumbnails
     """
@@ -37,9 +33,8 @@ class Thumbnails(BaseModel):
 
 
 @dataclass
-class Topic(BaseModel):
-    """
-    A class representing the channel topic info. this model also suitable for video.
+class Topic(Serializable):
+    """A class representing the channel topic info. this model also suitable for video.
 
     Refer:
         https://developers.google.com/youtube/v3/docs/channels#topicDetails.topicIds[]
@@ -53,34 +48,25 @@ class Topic(BaseModel):
 
 
 @dataclass
-class BaseTopicDetails(BaseModel):
-    """
-    This is the base model for channel or video topic details.
-    """
+class BaseTopicDetails(Serializable):
+    """This is the base model for channel or video topic details."""
 
-    topicIds: List[str] = field(default=None, repr=False)
+    topicIds: list[str] = field(repr=False)
 
-    def get_full_topics(self):
-        """
-        Convert topicIds list to Topic model list
-        :return: List[Topic]
-        """
-        from pyyoutube import TOPICS
+    def get_full_topics(self):  # noqa: ANN201, D102
+        from pyyoutube.utils.constants import TOPICS
 
-        r: List[Topic] = []
+        r: list[Topic] = []
         if self.topicIds:
             for topic_id in self.topicIds:
-                topic = Topic.from_dict(
-                    {"id": topic_id, "description": TOPICS.get(topic_id)}
-                )
+                topic = Topic.deserialize({"id": topic_id, "description": TOPICS.get(topic_id)})
                 r.append(topic)
         return r
 
 
 @dataclass
-class Localized(BaseModel):
-    """
-    A class representing the channel or video snippet localized info.
+class Localized(Serializable):
+    """A class representing the channel or video snippet localized info.
 
     Refer:
         https://developers.google.com/youtube/v3/docs/channels#snippet.localized
@@ -92,9 +78,9 @@ class Localized(BaseModel):
 
 
 @dataclass
-class PageInfo(BaseModel):
-    """
-    This is data model for save paging data.
+class PageInfo(Serializable):
+    """This is data model for save paging data.
+
     Note:
         totalResults is only an approximation/estimate.
         Refer:
@@ -102,48 +88,61 @@ class PageInfo(BaseModel):
     """
 
     totalResults: Optional[int] = field(default=None)
+    """The total number of results in the result set."""
     resultsPerPage: Optional[int] = field(default=None)
+    """The number of results included in the API response."""
 
 
 @dataclass
-class BaseApiResponse(BaseModel):
-    """
-    This is Data Api response structure when retrieve data.
-    They both have same response structure, but items.
+class PaginationResponse(Serializable):
+    """A base model for pagination response types."""
+
+    nextPageToken: str = field(repr=False)
+    """The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."""
+    prevPageToken: str = field(repr=False)
+    """The token that can be used as the value of the pageToken parameter to retrieve the previous page in the result set."""  # noqa: E501
+    pageInfo: PageInfo = field(repr=False)
+    """The pageInfo object encapsulates paging information for the result set."""
+
+
+@dataclass
+class BaseList(Serializable):
+    """A base model for list response types.
 
     Refer:
         https://developers.google.com/youtube/v3/docs/channels/list#response_1
         https://developers.google.com/youtube/v3/docs/playlistItems/list#response_1
     """
 
-    kind: Optional[str] = field(default=None)
-    etag: Optional[str] = field(default=None, repr=False)
-    nextPageToken: Optional[str] = field(default=None, repr=False)
-    prevPageToken: Optional[str] = field(default=None, repr=False)
-    pageInfo: Optional[PageInfo] = field(default=None, repr=False)
+    kind: str = field()
+    """Identifies the API resource's type."""
+    etag: str = field(repr=False)
+    """The Etag of this resource."""
 
 
 @dataclass
-class BaseResource(BaseModel):
-    """
-    This is a base model for different resource type.
+class BaseResource(Serializable):
+    """This is a base model for different resource type.
 
     Refer: https://developers.google.com/youtube/v3/docs#resource-types
     """
 
-    kind: Optional[str] = field(default=None)
-    etag: Optional[str] = field(default=None, repr=False)
-    id: Optional[str] = field(default=None)
+    kind: str = field()
+    """Identifies the API resource's type."""
+    etag: str = field(repr=False)
+    """The Etag of this resource."""
+    id: str = field()
+    """The ID that YouTube uses to uniquely identify the resource."""
 
 
 @dataclass
-class ResourceId(BaseModel):
-    """
-    A class representing the subscription snippet resource info.
+class ResourceId(Serializable):
+    """A class representing the subscription snippet resource info.
+
     Refer:
-        1. https://developers.google.com/youtube/v3/docs/playlistItems#snippet.resourceId
-        2. https://developers.google.com/youtube/v3/docs/subscriptions#snippet.resourceId
-        3. https://developers.google.com/youtube/v3/docs/activities#contentDetails.social.resourceId
+         1. https://developers.google.com/youtube/v3/docs/playlistItems#snippet.resourceId
+         2. https://developers.google.com/youtube/v3/docs/subscriptions#snippet.resourceId
+         3. https://developers.google.com/youtube/v3/docs/activities#contentDetails.social.resourceId
     """
 
     kind: Optional[str] = field(default=None)
@@ -153,13 +152,11 @@ class ResourceId(BaseModel):
 
 
 @dataclass
-class Player(BaseModel):
-    """
-    A class representing the video,playlist player info.
+class Player(Serializable):
+    """A class representing the video,playlist player info.
 
     Refer:
         https://developers.google.com/youtube/v3/docs/videos#player
-
     """
 
     embedHtml: Optional[str] = field(default=None)

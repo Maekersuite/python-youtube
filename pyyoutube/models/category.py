@@ -1,20 +1,15 @@
-"""
-    These are category related models.
-    Include VideoCategory
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
-from .base import BaseModel
-from .common import BaseApiResponse, BaseResource
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource
 
 
 @dataclass
-class CategorySnippet(BaseModel):
-    """
-    This is base category snippet for video and guide.
-    """
+class CategorySnippet(Serializable):
+    """This is base category snippet for video and guide."""
 
     channelId: Optional[str] = field(default=None)
     title: Optional[str] = field(default=None)
@@ -22,8 +17,7 @@ class CategorySnippet(BaseModel):
 
 @dataclass
 class VideoCategorySnippet(CategorySnippet):
-    """
-    A class representing video category snippet info.
+    """A class representing video category snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videoCategories#snippet
     """
@@ -33,8 +27,7 @@ class VideoCategorySnippet(CategorySnippet):
 
 @dataclass
 class VideoCategory(BaseResource):
-    """
-    A class representing video category info.
+    """A class representing video category info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videoCategories
     """
@@ -43,11 +36,10 @@ class VideoCategory(BaseResource):
 
 
 @dataclass
-class VideoCategoryListResponse(BaseApiResponse):
-    """
-     A class representing the video category's retrieve response info.
+class VideoCategoryListResponse(BaseList):
+    """A class representing the video category's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videoCategories/list#response_1
     """
 
-    items: Optional[List[VideoCategory]] = field(default=None, repr=False)
+    items: list[VideoCategory] = field(repr=False)

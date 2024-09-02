@@ -1,12 +1,10 @@
-"""
-    Members resource implementation.
-"""
-
 from typing import Optional, Union
 
-from pyyoutube.resources.base_resource import Resource
-from pyyoutube.models import MemberListResponse
-from pyyoutube.utils.params_checker import enf_parts, enf_comma_separated
+from ..models import MemberListResponse
+from ..protocols import APIClientProto
+from ..resources.resource import Resource
+from ..utils.params_checker import enf_comma_separated, enf_parts
+from .membership_levels import MembershipLevelsResource
 
 
 class MembersResource(Resource):
@@ -15,17 +13,21 @@ class MembersResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/members
     """
 
+    levels: MembershipLevelsResource
+
+    def __init__(self, client: APIClientProto) -> None:
+        super().__init__(client)
+        self.levels = MembershipLevelsResource(client)
+
     async def list(
         self,
-        parts: Optional[Union[str, list, tuple, set]] = None,
+        parts: Optional[Union[str, list[str]]] = None,
         mode: Optional[str] = None,
         max_results: Optional[int] = None,
         page_token: Optional[str] = None,
         has_access_to_level: Optional[str] = None,
-        filter_by_member_channel_id: Optional[Union[str, list, tuple, set]] = None,
-        return_json: bool = False,
-        **kwargs: Optional[dict],
-    ) -> Union[dict, MemberListResponse]:
+        filter_by_member_channel_id: Optional[Union[str, list[str]]] = None,
+    ) -> MemberListResponse:
         """Lists members (formerly known as "sponsors") for a channel.
 
         Args:
@@ -49,16 +51,10 @@ class MembersResource(Resource):
                 specifies a comma-separated list of channel IDs that can be used to check the membership
                 status of specific users.
                 Maximum of 100 channels can be specified per call.
-            return_json:
-                Type for returned data. If you set True JSON data will be returned.
-            **kwargs:
-                Additional parameters for system parameters.
-                Refer: https://cloud.google.com/apis/docs/system-parameters.
 
         Returns:
             Members data.
         """
-
         params = {
             "part": enf_parts(resource="members", value=parts),
             "mode": mode,
@@ -68,8 +64,6 @@ class MembersResource(Resource):
             "filterByMemberChannelId": enf_comma_separated(
                 field="filter_by_member_channel_id", value=filter_by_member_channel_id
             ),
-            **kwargs,
         }
-        response = await self._client.request(path="members", params=params)
-        data = await self._client.parse_response(response=response)
-        return data if return_json else MemberListResponse.from_dict(data)
+
+        return await self._client.list(MemberListResponse, path="members", params=params)

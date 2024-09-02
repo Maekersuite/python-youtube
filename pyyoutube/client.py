@@ -1,519 +1,193 @@
-import aiohttp
-import inspect
-import json
-from typing import List, Optional, Tuple, Union
+import asyncio
+from dataclasses import dataclass
+from typing import ClassVar, Optional, TypeVar
 
-import pyyoutube.resources as resources
-from pyyoutube.models.base import BaseModel
-from pyyoutube.error import ErrorCode, ErrorMessage, PyYouTubeException
-from pyyoutube.models import AccessToken
+import orjson
+from aiohttp import (
+    ClientSession,
+    ClientTimeout,
+    TCPConnector,
+    TraceConfig,
+)
 
-def _is_resource_endpoint(attr):
-    """
-    Checks if a given attribute is an instance of a resource endpoint.
+from .error import PyYouTubeServiceError, PyYouTubeSessionError
+from .protocols import APIClientProto
+from .resources import (
+    CaptionsResource,
+    ChannelsResource,
+    CommentsResource,
+    I18nLanguagesResource,
+    I18nRegionsResource,
+    MembersResource,
+    PlaylistsResource,
+    SearchResource,
+    SubscriptionsResource,
+    VideosResource,
+)
+from .utils.serializable import Serializable
 
-    Args:
-        attr: The attribute to check.
+T = TypeVar("T", bound=Serializable)
 
-    Returns:
-        bool: True if the attribute is an instance of a resource endpoint, False otherwise.
-    """
-    return isinstance(attr, resources.Resource)
 
-class Client:
-    """Client for YouTube resource"""
+# Base class for authentication methods
+class AuthenticationMethod:
+    """Base class for authentication methods."""
 
-    BASE_URL = "https://www.googleapis.com/youtube/v3/"
-    BASE_UPLOAD_URL = "https://www.googleapis.com/upload/youtube/v3/"
-    AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-    EXCHANGE_ACCESS_TOKEN_URL = "https://oauth2.googleapis.com/token"
-    REVOKE_TOKEN_URL = "https://oauth2.googleapis.com/revoke"
 
-    DEFAULT_REDIRECT_URI = "https://localhost/"
-    DEFAULT_SCOPE = [
-        "https://www.googleapis.com/auth/youtube",
-        "https://www.googleapis.com/auth/userinfo.profile",
-    ]
-    DEFAULT_STATE = "Python-YouTube"
+@dataclass
+class AccessTokenAuthentication(AuthenticationMethod):
+    """Authentication based on existing user's access token."""
 
-    activities = resources.ActivitiesResource()
-    captions = resources.CaptionsResource()
-    channels = resources.ChannelsResource()
-    channelBanners = resources.ChannelBannersResource()
-    channelSections = resources.ChannelSectionsResource()
-    comments = resources.CommentsResource()
-    commentThreads = resources.CommentThreadsResource()
-    i18nLanguages = resources.I18nLanguagesResource()
-    i18nRegions = resources.I18nRegionsResource()
-    members = resources.MembersResource()
-    membershipsLevels = resources.MembershipLevelsResource()
-    playlistItems = resources.PlaylistItemsResource()
-    playlists = resources.PlaylistsResource()
-    search = resources.SearchResource()
-    subscriptions = resources.SubscriptionsResource()
-    thumbnails = resources.ThumbnailsResource()
-    videoAbuseReportReasons = resources.VideoAbuseReportReasonsResource()
-    videoCategories = resources.VideoCategoriesResource()
-    videos = resources.VideosResource()
-    watermarks = resources.WatermarksResource()
+    access_token: str
+    refresh_token: Optional[str] = None
 
-    def __new__(cls, *args, **kwargs):
-        # Create a new instance of the class
-        self = super().__new__(cls)
 
-        # Get all attributes of the instance that are resource endpoints
-        sub_resources = inspect.getmembers(self, _is_resource_endpoint)
+@dataclass
+class APIKeyAuthentication(AuthenticationMethod):
+    """Authentication based on Developer Console App API key."""
 
-        # Iterate over each resource endpoint
-        for name, resource in sub_resources:
-            # Get the class of the resource
-            resource_cls = type(resource)
-            # Reinitialize the resource with the current instance of the client
-            resource = resource_cls(self)
-            # Set the reinitialized resource back to the instance
-            setattr(self, name, resource)
+    api_key: str
 
-        # Return the newly created instance
-        return self
+
+class Client(APIClientProto):
+    """YouTube Data API v3 client. Allows getting structured resources from the API."""
+
+    # The ETag caching is not implemented intentionally due to the following reasons:
+    # - We need to collect the most recent data (statistics part) for some resources (e.g. videos).
+    # - aiohttp ClientSession doesn't keep connections alive if headers change (ETag is provided via headers).
+
+    base_url: ClassVar[str] = "https://www.googleapis.com/youtube/v3/"
+
+    captions: CaptionsResource
+    channels: ChannelsResource
+    comments: CommentsResource
+    i18n_languages: I18nLanguagesResource
+    i18n_regions: I18nRegionsResource
+    members: MembersResource
+    playlists: PlaylistsResource
+    search: SearchResource
+    subscriptions: SubscriptionsResource
+    videos: VideosResource
+
+    session: ClientSession
+    """Current session for the API requests. Can be created manually or using context manager."""
+
+    concurrent_connections: int = 100
+    """The maximum number of concurrent connections to make."""
+
+    def _ua(self, gzip: bool = True) -> str:
+        """Generate a User-Agent string."""
+        agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"  # noqa: E501
+        if gzip:
+            agent += " (gzip)"
+        return agent
 
     def __init__(
         self,
-        client_id: Optional[str] = None,
-        client_secret: Optional[str] = None,
-        access_token: Optional[str] = None,
-        refresh_token: Optional[str] = None,
-        api_key: Optional[str] = None,
-        client_secret_path: Optional[str] = None,
-        timeout: Optional[int] = None,
-        proxies: Optional[dict] = None,
-        headers: Optional[dict] = None,
-    ) -> None:
-        """Class initial
-
-        Args:
-            client_id:
-                ID for your app.
-            client_secret:
-                Secret for your app.
-            access_token:
-                Access token for user authorized with your app.
-            refresh_token:
-                Refresh Token for user.
-            api_key:
-                API key for your app which generated from api console.
-            client_secret_path:
-                path to the client_secret.json file provided by google console
-            timeout:
-                Timeout for every request.
-            proxies:
-                Proxies for every request.
-            headers:
-                Headers for every request.
-
-        Raises:
-            PyYouTubeException: Missing either credentials.
-        """
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.access_token = access_token
-        self.refresh_token = refresh_token
-        self.api_key = api_key
-        self.timeout = timeout
-        self.proxies = proxies
-        self.headers = headers
-
-        self.session = aiohttp.ClientSession()
-        self.merge_headers()
-
-        if not self._has_client_data() and client_secret_path is not None:
-            # try to use client_secret file
-            self._from_client_secrets_file(client_secret_path)
-
-        # Auth settings
-        if not (self._has_auth_credentials() or self._has_client_data()):
-            raise PyYouTubeException(
-                ErrorMessage(
-                    status_code=ErrorCode.MISSING_PARAMS,
-                    message="Must specify either client key info or api key.",
-                )
-            )
-
-    async def _from_client_secrets_file(self, client_secret_path: str):
-        """Set credentials from client_secret file
-
-        Args:
-            client_secret_path:
-                path to the client_secret.json file, provided by google console
-
-        Raises:
-            PyYouTubeException: missing required key, client_secret file not in 'web' format.
-        """
-        with open(client_secret_path, "r") as f:
-            secrets_data = json.load(f)
-
-        credentials = None
-        for secrets_type in ["web", "installed"]:
-            if secrets_type in secrets_data:
-                credentials = secrets_data[secrets_type]
-
-        if not credentials:
-            raise PyYouTubeException(
-                ErrorMessage(
-                    status_code=ErrorCode.INVALID_PARAMS,
-                    message="Only 'web' and 'installed' type client_secret files are supported.",
-                )
-            )
-
-        # check for required fields
-        for field in ["client_secret", "client_id"]:
-            if field not in credentials:
-                raise PyYouTubeException(
-                    ErrorMessage(
-                        status_code=ErrorCode.MISSING_PARAMS,
-                        message=f"missing required field '{field}'.",
-                    )
-                )
-
-        self.client_id = credentials["client_id"]
-        self.client_secret = credentials["client_secret"]
-
-        # Set default redirect to first defined in client_secrets file if any
-        if "redirect_uris" in credentials and len(credentials["redirect_uris"]) > 0:
-            self.DEFAULT_REDIRECT_URI = credentials["redirect_uris"][0]
-
-    def _has_auth_credentials(self) -> bool:
-        return self.api_key or self.access_token
-
-    def _has_client_data(self) -> bool:
-        return self.client_id and self.client_secret
-
-    def merge_headers(self):
-        """Merge custom headers to session."""
-        if self.headers:
-            self.session.headers.update(self.headers)
-
-    @staticmethod
-    async def parse_response(response: aiohttp.ClientResponse) -> dict:
-        """Response parser
-
-        Args:
-            response:
-                Response from the Response.
-
-        Returns:
-            Response dict data.
-
-        Raises:
-            PyYouTubeException: If response has errors.
-        """
-        data = await response.json()
-        if "error" in data:
-            raise PyYouTubeException(response)
-        return data
-
-    async def request(
-        self,
-        path: str,
-        method: str = "GET",
-        params: Optional[dict] = None,
-        data: Optional[dict] = None,
-        json: Optional[dict] = None,
-        enforce_auth: bool = True,
-        is_upload: bool = False,
-        **kwargs,
+        auth: AuthenticationMethod,
+        timeout: Optional[ClientTimeout] = None,
+        proxy: Optional[str] = None,
+        headers: Optional[dict[str, str]] = None,
     ):
-        """Send request to YouTube.
+        """Initialize the YouTube API client with authentication and connection settings."""
+        self.auth = auth
+        self.timeout = timeout or ClientTimeout(total=30, connect=3)
+        self.proxy = proxy
+        self.headers: dict[str, str] = {"Accept-Encoding": "gzip", "User-Agent": self._ua(gzip=True)}
+        self.semaphore = asyncio.Semaphore(self.concurrent_connections)
+
+        if headers:
+            self.headers.update(headers)
+
+        self.captions = CaptionsResource(self)
+        self.channels = ChannelsResource(self)
+        self.comments = CommentsResource(self)
+        self.i18n_languages = I18nLanguagesResource(self)
+        self.i18n_regions = I18nRegionsResource(self)
+        self.members = MembersResource(self)
+        self.playlists = PlaylistsResource(self)
+        self.search = SearchResource(self)
+        self.subscriptions = SubscriptionsResource(self)
+        self.videos = VideosResource(self)
+
+        self.tracer = TraceConfig()
+        self.connector = TCPConnector(limit=self.concurrent_connections, keepalive_timeout=30, ttl_dns_cache=300)
+        self.session = ClientSession(
+            timeout=self.timeout, trace_configs=[self.tracer], connector=self.connector, headers=self.headers
+        )
+
+        if isinstance(self.auth, AccessTokenAuthentication):
+            self.session.headers.update({"Authorization": f"Bearer {self.auth.access_token}"})
+
+    async def __aenter__(self) -> "Client":
+        """Async context manager entry point."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback) -> None:  # noqa: ANN001
+        """Async context manager exit point. Closes the session if it's still open."""
+        if not self.session.closed:
+            await self.session.close()
+        await asyncio.sleep(0)
+
+    async def list(
+        self,
+        resource: type[T],
+        path: str,
+        params: dict[str, str],
+    ) -> T:
+        """Make a request to the YouTube Data API v3 and return the deserialized response.
 
         Args:
-            path:
-                Resource or url for YouTube data. such as channels,videos and so on.
-            method:
-                Method for the request.
-            params:
-                Object to send in the query string of the request.
-            data:
-                Object to send in the body of the request.
-            json:
-                Object json to send in the body of the request.
-            enforce_auth:
-                Whether to use user credentials.
-            is_upload:
-                Whether it is an upload job.
-            kwargs:
-                Additional parameters for request.
+            resource (type[T]): The Serializable class to deserialize the response into.
+            path (str): The API endpoint path.
+            params (dict[str, str]): Query parameters for the request.
 
         Returns:
-            Response for request.
+            T: The deserialized response.
 
         Raises:
-            PyYouTubeException: Missing credentials when need credentials.
-                                Request http error.
+            PyYouTubeSessionError: If the async session is not initialized or closed.
+            PyYouTubeServiceError: If there's an error with the API request or response.
         """
+        # Check if the session is initialized and open
+        if not self.session or self.session.closed:
+            raise PyYouTubeSessionError("Async session is not initialized or closed")
+
+        # Construct the full URL if necessary
         if not path.startswith("http"):
-            base_url = self.BASE_UPLOAD_URL if is_upload else self.BASE_URL
-            path = base_url + path
+            path = f"{self.base_url}{path}"
 
-        # Add credentials to request
-        if enforce_auth:
-            if self.api_key is None and self.access_token is None:
-                raise PyYouTubeException(
-                    ErrorMessage(
-                        status_code=ErrorCode.MISSING_PARAMS,
-                        message="You must provide your credentials.",
-                    )
-                )
-            else:
-                self.add_token_to_headers()
-                params = self.add_api_key_to_params(params=params)
+        # Add API key to params if using APIKeyAuthentication
+        if params and isinstance(self.auth, APIKeyAuthentication):
+            params.update({"key": self.auth.api_key})
 
-        # If json is dataclass convert to dict
-        if isinstance(json, BaseModel):
-            json = json.to_dict_ignore_none()
+        # Remove None values from params
+        if params:
+            params = {key: value for key, value in params.items() if value is not None}
 
-        async with self.session.request(
-            method=method,
-            url=path,
-            params=params,
-            data=data,
-            json=json,
-            proxy=self.proxies,
-            timeout=self.timeout,
-            **kwargs,
-        ) as response:
-            if response.status != 200:
-                raise PyYouTubeException(
-                    ErrorMessage(status_code=ErrorCode.HTTP_ERROR, message=await response.text())
-                )
-            return await self.parse_response(response)
+        # Make the API request
+        async with (
+            self.semaphore,
+            self.session.get(
+                url=path,
+                params=params,
+                proxy=self.proxy,
+            ) as response,
+        ):
+            # Handle the response
+            if response.status != 200:  # noqa: PLR2004
+                try:
+                    error = await response.text()
+                except Exception:
+                    error = "Unable to read error message"
+                raise PyYouTubeServiceError(response.status, error)
 
-    def add_token_to_headers(self):
-        if self.access_token:
-            self.session.headers.update(
-                {"Authorization": f"Bearer {self.access_token}"}
-            )
+            try:
+                data: dict[str, str] = await response.json(loads=orjson.loads)
+            except Exception as ex:
+                raise PyYouTubeServiceError(
+                    response.status, f"Unable to read response message ({ex.__class__.__name__}): {ex}"
+                ) from ex
 
-    def add_api_key_to_params(self, params: Optional[dict] = None):
-        if not self.api_key:
-            return params
-        if params is None:
-            params = {"key": self.api_key}
-        else:
-            params["key"] = self.api_key
-        return params
-
-    async def _get_oauth_session(
-        self,
-        redirect_uri: Optional[str] = None,
-        scope: Optional[List[str]] = None,
-        state: Optional[str] = None,
-        **kwargs,
-    ) -> aiohttp.ClientSession:
-        """Build request session for authorization
-
-        Args:
-            redirect_uri:
-                Determines how Google's authorization server sends a response to your app.
-                If not provide will use default https://localhost/
-            scope:
-                Permission scope for authorization.
-                see more: https://developers.google.com/identity/protocols/oauth2/scopes#youtube
-            state:
-                State string for authorization.
-            **kwargs:
-                Additional parameters for session.
-
-        Returns:
-            OAuth2.0 Session
-        """
-        redirect_uri = (
-            redirect_uri if redirect_uri is not None else self.DEFAULT_REDIRECT_URI
-        )
-        scope = scope if scope is not None else self.DEFAULT_SCOPE
-        state = state if state is not None else self.DEFAULT_STATE
-
-        return aiohttp.ClientSession(
-            headers={
-                "client_id": self.client_id,
-                "scope": " ".join(scope),
-                "redirect_uri": redirect_uri,
-                "state": state,
-                **kwargs,
-            }
-        )
-
-    async def get_authorize_url(
-        self,
-        redirect_uri: Optional[str] = None,
-        scope: Optional[List[str]] = None,
-        access_type: str = "offline",
-        state: Optional[str] = None,
-        include_granted_scopes: Optional[bool] = None,
-        login_hint: Optional[str] = None,
-        prompt: Optional[str] = None,
-        **kwargs,
-    ) -> Tuple[str, str]:
-        """Get authorize url for user.
-
-        Args:
-            redirect_uri:
-                Determines how Google's authorization server sends a response to your app.
-                If not provide will use default https://localhost/
-            scope:
-                The scope you want user to grant permission.
-            access_type:
-                Indicates whether your application can refresh access tokens when the user
-                is not present at the browser.
-                Valid parameter are `online` and `offline`.
-            state:
-                State string between your authorization request and the authorization server's response.
-            include_granted_scopes:
-                Enables applications to use incremental authorization to request
-                access to additional scopes in context.
-                Set true to enable.
-            login_hint:
-                Set the parameter value to an email address or sub identifier, which is
-                equivalent to the user's Google ID.
-            prompt:
-                A space-delimited, case-sensitive list of prompts to present the user.
-                Possible values are:
-                - none:
-                    Do not display any authentication or consent screens.
-                    Must not be specified with other values.
-                - consent:
-                    Prompt the user for consent.
-                - select_account:
-                    Prompt the user to select an account.
-            **kwargs:
-                Additional parameters for authorize session.
-
-        Returns:
-            A tuple of (url, state)
-
-            url: Authorize url for user.
-            state: State string for authorization.
-
-        References:
-            https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps
-        """
-        session = await self._get_oauth_session(
-            redirect_uri=redirect_uri,
-            scope=scope,
-            state=state,
-            **kwargs,
-        )
-        authorize_url, state = session.authorization_url(
-            url=self.AUTHORIZATION_URL,
-            access_type=access_type,
-            include_granted_scopes=include_granted_scopes,
-            login_hint=login_hint,
-            prompt=prompt,
-        )
-        return authorize_url, state
-
-    async def generate_access_token(
-        self,
-        authorization_response: Optional[str] = None,
-        code: Optional[str] = None,
-        redirect_uri: Optional[str] = None,
-        scope: Optional[List[str]] = None,
-        state: Optional[str] = None,
-        return_json: bool = False,
-        **kwargs,
-    ) -> Union[dict, AccessToken]:
-        """Exchange the authorization code or authorization response for an access token.
-
-        Args:
-            authorization_response:
-                Response url for YouTune redirected to.
-            code:
-                Authorization code from authorization_response.
-            redirect_uri:
-                Determines how Google's authorization server sends a response to your app.
-                If not provide will use default https://localhost/
-            scope:
-                The scope you want user to grant permission.
-            state:
-                State string between your authorization request and the authorization server's response.
-            return_json:
-                Type for returned data. If you set True JSON data will be returned.
-            **kwargs:
-                Additional parameters for authorize session.
-
-        Returns:
-            Access token data.
-        """
-        session = await self._get_oauth_session(
-            redirect_uri=redirect_uri,
-            scope=scope,
-            state=state,
-            **kwargs,
-        )
-        token = await session.fetch_token(
-            token_url=self.EXCHANGE_ACCESS_TOKEN_URL,
-            client_secret=self.client_secret,
-            authorization_response=authorization_response,
-            code=code,
-            proxy=self.proxies,
-        )
-        self.access_token = token["access_token"]
-        self.refresh_token = token.get("refresh_token")
-        return token if return_json else AccessToken.from_dict(token)
-
-    async def refresh_access_token(
-        self, refresh_token: str, return_json: bool = False, **kwargs
-    ) -> Union[dict, AccessToken]:
-        """Refresh new access token.
-
-        Args:
-            refresh_token:
-                The refresh token returned from the authorization code exchange.
-            return_json:
-                Type for returned data. If you set True JSON data will be returned.
-            **kwargs:
-                Additional parameters for request.
-
-        Returns:
-            Access token data.
-        """
-        response = await self.request(
-            method="POST",
-            path=self.EXCHANGE_ACCESS_TOKEN_URL,
-            data={
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
-                "refresh_token": refresh_token,
-                "grant_type": "refresh_token",
-            },
-            enforce_auth=False,
-            **kwargs,
-        )
-        data = await self.parse_response(response)
-        return data if return_json else AccessToken.from_dict(data)
-
-    async def revoke_access_token(
-        self,
-        token: str,
-    ) -> bool:
-        """Revoke token.
-
-        Notes:
-            If the token is an access token which has a corresponding refresh token,
-            the refresh token will also be revoked.
-
-        Args:
-            token:
-                Can be an access token or a refresh token.
-
-        Returns:
-            Revoked status
-
-        Raises:
-            PyYouTubeException: When occur errors.
-        """
-        response = await self.request(
-            method="POST",
-            path=self.REVOKE_TOKEN_URL,
-            params={"token": token},
-            enforce_auth=False,
-        )
-        return response.ok
+            # Deserialize and return the response data
+            return resource.deserialize(data)

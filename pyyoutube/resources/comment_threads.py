@@ -1,28 +1,23 @@
-"""
-    Comment threads resource implementation.
-"""
-
 from typing import Optional, Union
 
-from pyyoutube.error import PyYouTubeException, ErrorMessage, ErrorCode
-from pyyoutube.resources.base_resource import Resource
-from pyyoutube.models import CommentThread, CommentThreadListResponse
-from pyyoutube.utils.params_checker import enf_parts
+from ..error import PyYouTubeIncorrectParamsError
+from ..models import CommentThreadListResponse
+from ..resources.resource import Resource
+from ..utils.params_checker import enf_parts
 
 
 class CommentThreadsResource(Resource):
-    """A commentThread resource contains information about a YouTube comment thread, which comprises a
-    top-level comment and replies, if any exist, to that comment
+    """A commentThread resource contains information about a YouTube comment thread, which comprises a top-level comment and replies, if any exist, to that comment.
 
     References: https://developers.google.com/youtube/v3/docs/commentThreads
-    """
+    """  # noqa: E501
 
     async def list(
         self,
-        parts: Optional[Union[str, list, tuple, set]] = None,
+        parts: Optional[Union[str, list[str]]] = None,
         all_threads_related_to_channel_id: Optional[str] = None,
         channel_id: Optional[str] = None,
-        thread_id: Optional[Union[str, list, tuple, set]] = None,
+        thread_id: Optional[Union[str, list[str]]] = None,
         video_id: Optional[str] = None,
         max_results: Optional[int] = None,
         moderation_status: Optional[str] = None,
@@ -30,9 +25,7 @@ class CommentThreadsResource(Resource):
         page_token: Optional[str] = None,
         search_terms: Optional[str] = None,
         text_format: Optional[str] = None,
-        return_json: bool = False,
-        **kwargs: Optional[dict],
-    ) -> Union[dict, CommentThreadListResponse]:
+    ) -> CommentThreadListResponse:
         """Returns a list of comment threads that match the API request parameters.
 
         Args:
@@ -71,21 +64,14 @@ class CommentThreadsResource(Resource):
                 Set this parameter's value to html or plainText to instruct the API to return the comments
                 left by users in html formatted or in plain text. The default value is html.
                 Acceptable values are:
-                    – html: Returns the comments in HTML format. This is the default value.
-                    – plainText: Returns the comments in plain text format.
+                    - html: Returns the comments in HTML format. This is the default value.
+                    - plainText: Returns the comments in plain text format.
                 Notes: This parameter is not supported for use in conjunction with the `id` parameter.
-            return_json:
-                Type for returned data. If you set True JSON data will be returned.
-            **kwargs:
-                Additional parameters for system parameters.
-                Refer: https://cloud.google.com/apis/docs/system-parameters.
 
         Returns:
             Comment threads data.
-        Raises:
-            PyYouTubeException: Missing filter parameter.
-        """
 
+        """
         params = {
             "part": enf_parts(resource="commentThreads", value=parts),
             "maxResults": max_results,
@@ -94,7 +80,6 @@ class CommentThreadsResource(Resource):
             "pageToken": page_token,
             "searchTerms": search_terms,
             "textFormat": text_format,
-            **kwargs,
         }
         if all_threads_related_to_channel_id is not None:
             params["allThreadsRelatedToChannelId"] = all_threads_related_to_channel_id
@@ -105,52 +90,8 @@ class CommentThreadsResource(Resource):
         elif video_id:
             params["videoId"] = video_id
         else:
-            raise PyYouTubeException(
-                ErrorMessage(
-                    status_code=ErrorCode.MISSING_PARAMS,
-                    message="Specify at least one of all_threads_related_to_channel_id,channel_id,thread_id or video_id",
-                )
+            raise PyYouTubeIncorrectParamsError(
+                "Specify at least one of all_threads_related_to_channel_id,channel_id,thread_id or video_id"
             )
-        response = await self._client.request(path="commentThreads", params=params)
-        data = await self._client.parse_response(response=response)
-        return data if return_json else CommentThreadListResponse.from_dict(data)
 
-    async def insert(
-        self,
-        body: Union[dict, CommentThread],
-        parts: Optional[Union[str, list, tuple, set]] = None,
-        return_json: bool = False,
-        **kwargs,
-    ) -> Union[dict, CommentThread]:
-        """Creates a new top-level comment.
-
-        Notes: To add a reply to an existing comment, use the comments.insert method instead.
-
-        Args:
-            body:
-                Provide a commentThread resource in the request body. You can give dataclass or just a dict with data.
-            parts:
-                Comma-separated list of one or more comment thread resource properties.
-            return_json:
-                Type for returned data. If you set True JSON data will be returned.
-            **kwargs:
-                Additional parameters for system parameters.
-                Refer: https://cloud.google.com/apis/docs/system-parameters.
-
-        Returns:
-            Channel thread data.
-
-        """
-        params = {
-            "part": enf_parts(resource="commentThreads", value=parts),
-            **kwargs,
-        }
-
-        response = await self._client.request(
-            method="POST",
-            path="commentThreads",
-            params=params,
-            json=body,
-        )
-        data = await self._client.parse_response(response=response)
-        return data if return_json else CommentThread.from_dict(data)
+        return await self._client.list(CommentThreadListResponse, path="commentThreads", params=params)

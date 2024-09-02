@@ -1,18 +1,15 @@
-"""
-    These are i18n language and region related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
-from .base import BaseModel
-from .common import BaseResource, BaseApiResponse
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource
 
 
 @dataclass
-class I18nRegionSnippet(BaseModel):
-    """
-    A class representing the I18n region snippet info.
+class I18nRegionSnippet(Serializable):
+    """A class representing the I18n region snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/i18nRegions#snippet
     """
@@ -23,8 +20,7 @@ class I18nRegionSnippet(BaseModel):
 
 @dataclass
 class I18nRegion(BaseResource):
-    """
-    A class representing the I18n region info.
+    """A class representing the I18n region info.
 
     Refer: https://developers.google.com/youtube/v3/docs/i18nRegions#resource-representation
     """
@@ -33,20 +29,18 @@ class I18nRegion(BaseResource):
 
 
 @dataclass
-class I18nRegionListResponse(BaseApiResponse):
-    """
-    A class representing the I18n region list response info.
+class I18nRegionListResponse(BaseList):
+    """A class representing the I18n region list response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/i18nLanguages/list#response_1
     """
 
-    items: Optional[List[I18nRegion]] = field(default=None, repr=False)
+    items: list[I18nRegion] = field(repr=False)
 
 
 @dataclass
-class I18nLanguageSnippet(BaseModel):
-    """
-    A class representing the I18n language snippet info.
+class I18nLanguageSnippet(Serializable):
+    """A class representing the I18n language snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/i18nLanguages#snippet
     """
@@ -57,8 +51,7 @@ class I18nLanguageSnippet(BaseModel):
 
 @dataclass
 class I18nLanguage(BaseResource):
-    """
-    A class representing the I18n language info.
+    """A class representing the I18n language info.
 
     Refer: https://developers.google.com/youtube/v3/docs/i18nLanguages#resource-representation
     """
@@ -67,11 +60,10 @@ class I18nLanguage(BaseResource):
 
 
 @dataclass
-class I18nLanguageListResponse(BaseApiResponse):
-    """
-    A class representing the I18n language list response info.
+class I18nLanguageListResponse(BaseList):
+    """A class representing the I18n language list response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/i18nLanguages/list#response_1
     """
 
-    items: Optional[List[I18nLanguage]] = field(default=None, repr=False)
+    items: list[I18nLanguage] = field(repr=False)

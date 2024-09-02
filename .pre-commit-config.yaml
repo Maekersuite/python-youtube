@@ -1,0 +1,37 @@
+default_stages: [commit]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files
+        args:
+          - --maxkb=256
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  - repo: local
+    hooks:
+      - id: rye-ruff
+        name: ruff
+        entry: rye run fix:ruff
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: rye-structure-test
+        name: pytest structure
+        entry: rye run test:structure
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: rye-sync-all-features
+        name: rye sync --all-features
+        entry: rye sync --all-features
+        language: system
+        pass_filenames: false
+        always_run: true

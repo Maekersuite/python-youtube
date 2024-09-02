@@ -1,7 +1,3 @@
-"""
-    some constants for YouTube
-"""
-
 ACTIVITIES_RESOURCE_PROPERTIES = {"id", "snippet", "contentDetails"}
 
 CAPTIONS_RESOURCE_PROPERTIES = {"id", "snippet"}

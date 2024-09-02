@@ -1,24 +1,19 @@
-"""
-    Search resource implementation.
-"""
-
 from typing import Optional, Union
 
-from pyyoutube.resources.base_resource import Resource
-from pyyoutube.models import SearchListResponse
-from pyyoutube.utils.params_checker import enf_parts
+from ..models import SearchListResponse
+from ..resources.resource import Resource
+from ..utils.params_checker import enf_parts
 
 
 class SearchResource(Resource):
-    """A search result contains information about a YouTube video, channel, or playlist
-    that matches the search parameters specified in an API request
+    """A search result contains information about a YouTube video, channel, or playlist that matches the search parameters specified in an API request.
 
     References: https://developers.google.com/youtube/v3/docs/search
-    """
+    """  # noqa: E501
 
     async def list(
         self,
-        parts: Optional[Union[str, list, tuple, set]] = None,
+        parts: Optional[Union[str, list[str]]] = None,
         for_content_owner: Optional[bool] = None,
         for_developer: Optional[bool] = None,
         for_mine: Optional[bool] = None,
@@ -39,7 +34,7 @@ class SearchResource(Resource):
         relevance_language: Optional[str] = None,
         safe_search: Optional[str] = None,
         topic_id: Optional[str] = None,
-        type: Optional[Union[str, list, tuple, set]] = None,
+        type: Optional[Union[str, list, tuple, list[str]]] = None,
         video_caption: Optional[str] = None,
         video_category_id: Optional[str] = None,
         video_definition: Optional[str] = None,
@@ -50,9 +45,7 @@ class SearchResource(Resource):
         video_paid_product_placement: Optional[str] = None,
         video_syndicated: Optional[str] = None,
         video_type: Optional[str] = None,
-        return_json: bool = False,
-        **kwargs: Optional[dict],
-    ) -> Union[dict, SearchListResponse]:
+    ) -> SearchListResponse:
         """Returns a collection of search results that match the query parameters specified in the API request.
 
         Notes:
@@ -181,16 +174,16 @@ class SearchResource(Resource):
             video_license:
                 Parameter filters search results to only include videos with a particular license.
                 Acceptable values are:
-                    - any – Return all videos, regardless of which license they have, that match the query parameters.
-                    - creativeCommon – Only return videos that have a Creative Commons license.
+                    - any - Return all videos, regardless of which license they have, that match the query parameters.
+                    - creativeCommon - Only return videos that have a Creative Commons license.
                         Users can reuse videos with this license in other videos that they create. Learn more.
-                    - youtube – Only return videos that have the standard YouTube license.
+                    - youtube - Only return videos that have the standard YouTube license.
             video_paid_product_placement:
                 Parameter filters search results to only include videos that the creator has denoted as
                 having a paid promotion.
                 Acceptable values are:
-                    - any – Return all videos, regardless of whether they contain paid promotions.
-                    - true – Only retrieve videos with paid promotions.
+                    - any - Return all videos, regardless of whether they contain paid promotions.
+                    - true - Only retrieve videos with paid promotions.
             video_syndicated:
                 Parameter lets you to restrict a search to only videos that can be played outside youtube.com.
                 Acceptable values are:
@@ -202,16 +195,11 @@ class SearchResource(Resource):
                     - any: Return all videos.
                     - episode: Only retrieve episodes of shows.
                     - movie: Only retrieve movies.
-            return_json:
-                Type for returned data. If you set True JSON data will be returned.
-            **kwargs:
-                Additional parameters for system parameters.
-                Refer: https://cloud.google.com/apis/docs/system-parameters.
+
         Returns:
             Search result data
 
         """
-
         params = {
             "part": enf_parts(resource="search", value=parts),
             "channelId": channel_id,
@@ -241,7 +229,6 @@ class SearchResource(Resource):
             "videoPaidProductPlacement": video_paid_product_placement,
             "videoSyndicated": video_syndicated,
             "videoType": video_type,
-            **kwargs,
         }
 
         if for_content_owner is not None:
@@ -253,6 +240,4 @@ class SearchResource(Resource):
         elif related_to_video_id is not None:
             params["relatedToVideoId"] = related_to_video_id
 
-        response = await self._client.request(path="search", params=params)
-        data = await self._client.parse_response(response=response)
-        return data if return_json else SearchListResponse.from_dict(data)
+        return await self._client.list(SearchListResponse, "search", params)

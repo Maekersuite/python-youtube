@@ -1,30 +1,27 @@
-"""
-    These are watermark related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
 from typing import Optional
 
-from .base import BaseModel
+from ..utils.serializable import Serializable
 
 
 @dataclass
-class WatermarkTiming(BaseModel):
+class WatermarkTiming(Serializable):  # noqa: D101
     type: Optional[str] = field(default=None)
     offsetMs: Optional[int] = field(default=None, repr=False)
     durationMs: Optional[int] = field(default=None, repr=False)
 
 
 @dataclass
-class WatermarkPosition(BaseModel):
+class WatermarkPosition(Serializable):  # noqa: D101
     type: Optional[str] = field(default=None)
     cornerPosition: Optional[str] = field(default=None, repr=False)
 
 
 @dataclass
-class Watermark(BaseModel):
-    """
-    A class representing the watermark info.
+class Watermark(Serializable):
+    """A class representing the watermark info.
 
     References: https://developers.google.com/youtube/v3/docs/watermarks#resource-representation
     """

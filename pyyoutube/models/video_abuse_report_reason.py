@@ -1,55 +1,48 @@
-"""
-    These are video abuse report reason related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import Optional, List
 
-from .base import BaseModel
-from .common import BaseResource, BaseApiResponse
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource
 
 
 @dataclass
-class SecondaryReason(BaseModel):
-    """
-    A class representing the video abuse report reason info
+class SecondaryReason(Serializable):
+    """A class representing the video abuse report reason info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videoAbuseReportReasons#snippet.secondaryReasons
     """
 
-    id: Optional[str] = field(default=None)
-    label: Optional[str] = field(default=None, repr=True)
+    id: str = field()
+    label: str = field(repr=True)
 
 
 @dataclass
-class VideoAbuseReportReasonSnippet(BaseModel):
-    """
-    A class representing the video abuse report snippet info
+class VideoAbuseReportReasonSnippet(Serializable):
+    """A class representing the video abuse report snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videoAbuseReportReasons#snippet
     """
 
-    label: Optional[str] = field(default=None)
-    secondaryReasons: Optional[List[SecondaryReason]] = field(default=None, repr=True)
+    label: str = field()
+    secondaryReasons: list[SecondaryReason] = field(repr=True)
 
 
 @dataclass
 class VideoAbuseReportReason(BaseResource):
-    """
-    A class representing the video abuse report info
+    """A class representing the video abuse report info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videoAbuseReportReasons
     """
 
-    snippet: Optional[VideoAbuseReportReasonSnippet] = field(default=None)
+    snippet: VideoAbuseReportReasonSnippet = field()
 
 
 @dataclass
-class VideoAbuseReportReasonListResponse(BaseApiResponse):
-    """
-    A class representing the I18n language list response info.
+class VideoAbuseReportReasonListResponse(BaseList):
+    """A class representing the I18n language list response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videoAbuseReportReasons/list#response_1
     """
 
-    items: Optional[List[VideoAbuseReportReason]] = field(default=None, repr=False)
+    items: list[VideoAbuseReportReason] = field(repr=False)

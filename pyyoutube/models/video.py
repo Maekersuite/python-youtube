@@ -1,19 +1,14 @@
-"""
-    These are video related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional
 
-import isodate
-from isodate import ISO8601Error
-
-from pyyoutube.error import ErrorCode, ErrorMessage, PyYouTubeException
-from .base import BaseModel
+from ..utils import get_video_duration
+from ..utils.serializable import Serializable
 from .common import (
-    BaseApiResponse,
-    BaseTopicDetails,
+    BaseList,
     BaseResource,
+    BaseTopicDetails,
     Localized,
     Player,
     Thumbnails,
@@ -22,21 +17,18 @@ from .mixins import DatetimeTimeMixin
 
 
 @dataclass
-class RegionRestriction(BaseModel):
-    """
-    A class representing the video content details region restriction info
+class RegionRestriction(Serializable):
+    """A class representing the video content details region restriction info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos#contentDetails.regionRestriction
     """
 
-    allowed: Optional[List[str]] = field(default=None)
-    blocked: Optional[List[str]] = field(default=None, repr=False)
+    allowed: Optional[list[str]] = field(default=None)
+    blocked: Optional[list[str]] = field(default=None, repr=False)
 
 
-# TODO get detail rating description
-class ContentRating(BaseModel):
-    """
-    A class representing the video content rating info.
+class ContentRating(Serializable):
+    """A class representing the video content rating info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos#contentDetails.contentRating
     """
@@ -61,7 +53,7 @@ class ContentRating(BaseModel):
     cscfRating: Optional[str] = field(default=None, repr=False)
     czfilmRating: Optional[str] = field(default=None, repr=False)
     djctqRating: Optional[str] = field(default=None, repr=False)
-    djctqRatingReasons: List[str] = field(default=None, repr=False)
+    djctqRatingReasons: Optional[list[str]] = field(default=None, repr=False)
     ecbmctRating: Optional[str] = field(default=None, repr=False)
     eefilmRating: Optional[str] = field(default=None, repr=False)
     egfilmRating: Optional[str] = field(default=None, repr=False)
@@ -69,7 +61,7 @@ class ContentRating(BaseModel):
     fcbmRating: Optional[str] = field(default=None, repr=False)
     fcoRating: Optional[str] = field(default=None, repr=False)
     fpbRating: Optional[str] = field(default=None, repr=False)
-    fpbRatingReasons: List[str] = field(default=None, repr=False)
+    fpbRatingReasons: Optional[list[str]] = field(default=None, repr=False)
     fskRating: Optional[str] = field(default=None, repr=False)
     grfilmRating: Optional[str] = field(default=None, repr=False)
     icaaRating: Optional[str] = field(default=None, repr=False)
@@ -110,9 +102,8 @@ class ContentRating(BaseModel):
 
 
 @dataclass
-class VideoContentDetails(BaseModel):
-    """
-    A class representing the video content details info.
+class VideoContentDetails(Serializable):
+    """A class representing the video content details info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos#contentDetails
     """
@@ -127,23 +118,16 @@ class VideoContentDetails(BaseModel):
     projection: Optional[str] = field(default=None, repr=False)
     hasCustomThumbnail: Optional[bool] = field(default=None, repr=False)
 
-    def get_video_seconds_duration(self):
+    def get_video_seconds_duration(self):  # noqa: ANN201, D102
         if not self.duration:
             return None
-        try:
-            seconds = isodate.parse_duration(self.duration).total_seconds()
-        except ISO8601Error as e:
-            raise PyYouTubeException(
-                ErrorMessage(status_code=ErrorCode.INVALID_PARAMS, message=e.args[0])
-            )
-        else:
-            return int(seconds)
+
+        return get_video_duration(self.duration)
 
 
 @dataclass
 class VideoTopicDetails(BaseTopicDetails):
-    """
-    A class representing video's topic detail info.
+    """A class representing video's topic detail info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos#topicDetails
     """
@@ -151,24 +135,18 @@ class VideoTopicDetails(BaseTopicDetails):
     # Important:
     # This property has been deprecated as of November 10, 2016.
     # Any topics associated with a video are now returned by the topicDetails.relevantTopicIds[] property value.
-    topicIds: Optional[List[str]] = field(default=None, repr=False)
-    relevantTopicIds: Optional[List[str]] = field(default=None, repr=False)
-    topicCategories: Optional[List[str]] = field(default=None)
+    topicIds: Optional[list[str]] = field(default=None, repr=False)
+    relevantTopicIds: Optional[list[str]] = field(default=None, repr=False)
+    topicCategories: Optional[list[str]] = field(default=None)
 
     def __post_init__(self):
-        """
-        If topicIds is not return and relevantTopicIds has return. let relevantTopicIds for topicIds.
-        This is for the get_full_topics method.
-        :return:
-        """
         if self.topicIds is None and self.relevantTopicIds is not None:
             self.topicIds = self.relevantTopicIds
 
 
 @dataclass
-class VideoSnippet(BaseModel, DatetimeTimeMixin):
-    """
-    A class representing the video snippet info.
+class VideoSnippet(Serializable, DatetimeTimeMixin):
+    """A class representing the video snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos#snippet
     """
@@ -179,7 +157,7 @@ class VideoSnippet(BaseModel, DatetimeTimeMixin):
     description: Optional[str] = field(default=None)
     thumbnails: Optional[Thumbnails] = field(default=None, repr=False)
     channelTitle: Optional[str] = field(default=None, repr=False)
-    tags: Optional[List[str]] = field(default=None, repr=False)
+    tags: Optional[list[str]] = field(default=None, repr=False)
     categoryId: Optional[str] = field(default=None, repr=False)
     liveBroadcastContent: Optional[str] = field(default=None, repr=False)
     defaultLanguage: Optional[str] = field(default=None, repr=False)
@@ -188,31 +166,29 @@ class VideoSnippet(BaseModel, DatetimeTimeMixin):
 
 
 @dataclass
-class VideoStatistics(BaseModel):
-    """
-    A class representing the video statistics info.
+class VideoStatistics(Serializable):
+    """A class representing the video statistics info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos#statistics
     """
 
-    viewCount: Optional[int] = field(default=None)
+    viewCount: int = field()
     likeCount: Optional[int] = field(default=None)
     dislikeCount: Optional[int] = field(default=None, repr=False)
     commentCount: Optional[int] = field(default=None, repr=False)
 
 
 @dataclass
-class VideoStatus(BaseModel, DatetimeTimeMixin):
-    """
-    A class representing the video status info.
+class VideoStatus(Serializable, DatetimeTimeMixin):
+    """A class representing the video status info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos#status
     """
 
-    uploadStatus: Optional[str] = field(default=None)
+    uploadStatus: Optional[str] = field(default=None, repr=False)
     failureReason: Optional[str] = field(default=None, repr=False)
     rejectionReason: Optional[str] = field(default=None, repr=False)
-    privacyStatus: Optional[str] = field(default=None)
+    privacyStatus: Optional[str] = field(default=None, repr=False)
     publishAt: Optional[str] = field(default=None, repr=False)
     license: Optional[str] = field(default=None, repr=False)
     embeddable: Optional[bool] = field(default=None, repr=False)
@@ -222,9 +198,8 @@ class VideoStatus(BaseModel, DatetimeTimeMixin):
 
 
 @dataclass
-class VideoLiveStreamingDetails(BaseModel, DatetimeTimeMixin):
-    """
-    A class representing the video live streaming details.
+class VideoLiveStreamingDetails(Serializable, DatetimeTimeMixin):
+    """A class representing the video live streaming details.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos#liveStreamingDetails
     """
@@ -233,69 +208,32 @@ class VideoLiveStreamingDetails(BaseModel, DatetimeTimeMixin):
     actualEndTime: Optional[str] = field(default=None, repr=False)
     scheduledStartTime: Optional[str] = field(default=None, repr=False)
     scheduledEndTime: Optional[str] = field(default=None, repr=False)
-    concurrentViewers: Optional[int] = field(default=None)
+    concurrentViewers: Optional[int] = field(default=None, repr=False)
     activeLiveChatId: Optional[str] = field(default=None, repr=False)
 
 
 @dataclass
 class Video(BaseResource):
-    """
-    A class representing the video info.
+    """A class representing the video info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos
     """
 
-    snippet: Optional[VideoSnippet] = field(default=None, repr=False)
-    contentDetails: Optional[VideoContentDetails] = field(default=None, repr=False)
-    status: Optional[VideoStatus] = field(default=None, repr=False)
-    statistics: Optional[VideoStatistics] = field(default=None, repr=False)
-    topicDetails: Optional[VideoTopicDetails] = field(default=None, repr=False)
-    player: Optional[Player] = field(default=None, repr=False)
-    liveStreamingDetails: Optional[VideoLiveStreamingDetails] = field(
-        default=None, repr=False
-    )
+    snippet: VideoSnippet = field(repr=False)
+    contentDetails: VideoContentDetails = field(repr=False)
+    status: VideoStatus = field(repr=False)
+    statistics: VideoStatistics = field(repr=False)
+    topicDetails: VideoTopicDetails = field(repr=False)
+    player: Player = field(repr=False)
+    liveStreamingDetails: Optional[VideoLiveStreamingDetails] = field(default=None, repr=False)
 
 
 @dataclass
-class VideoListResponse(BaseApiResponse):
-    """
-    A class representing the video's retrieve response info.
+class VideoListResponse(BaseList):
+    """A class representing the video's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos/list#response_1
     """
 
-    items: Optional[List[Video]] = field(default=None, repr=False)
-
-
-@dataclass
-class VideoReportAbuse(BaseModel):
-    """
-    A class representing the video report abuse body.
-    """
-
-    videoId: Optional[str] = field(default=None)
-    reasonId: Optional[str] = field(default=None)
-    secondaryReasonId: Optional[str] = field(default=None)
-    comments: Optional[str] = field(default=None)
-    language: Optional[str] = field(default=None)
-
-
-@dataclass
-class VideoRatingItem(BaseModel):
-    """
-    A class representing the video rating item info.
-    """
-
-    videoId: Optional[str] = field(default=None)
-    rating: Optional[str] = field(default=None)
-
-
-@dataclass
-class VideoGetRatingResponse(BaseApiResponse):
-    """
-    A class representing the video rating response.
-
-    References: https://developers.google.com/youtube/v3/docs/videos/getRating#properties
-    """
-
-    items: Optional[List[VideoRatingItem]] = field(default=None, repr=False)
+    items: list[Video] = field(repr=False)
+    """A list of videos that match the request criteria."""

@@ -1,19 +1,16 @@
-"""
-    These are playlistItem related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
-from .base import BaseModel
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource, ResourceId, Thumbnails
 from .mixins import DatetimeTimeMixin
-from .common import BaseApiResponse, BaseResource, ResourceId, Thumbnails
 
 
 @dataclass
-class PlaylistItemContentDetails(BaseModel, DatetimeTimeMixin):
-    """
-    A class representing the playlist item's content details info.
+class PlaylistItemContentDetails(Serializable, DatetimeTimeMixin):
+    """A class representing the playlist item's content details info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlistItems#contentDetails
     """
@@ -26,9 +23,8 @@ class PlaylistItemContentDetails(BaseModel, DatetimeTimeMixin):
 
 
 @dataclass
-class PlaylistItemSnippet(BaseModel, DatetimeTimeMixin):
-    """
-    A class representing the playlist item's snippet info.
+class PlaylistItemSnippet(Serializable, DatetimeTimeMixin):
+    """A class representing the playlist item's snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlistItems#snippet
     """
@@ -47,9 +43,8 @@ class PlaylistItemSnippet(BaseModel, DatetimeTimeMixin):
 
 
 @dataclass
-class PlaylistItemStatus(BaseModel):
-    """
-    A class representing the playlist item's status info.
+class PlaylistItemStatus(Serializable):
+    """A class representing the playlist item's status info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlistItems#status
     """
@@ -59,25 +54,21 @@ class PlaylistItemStatus(BaseModel):
 
 @dataclass
 class PlaylistItem(BaseResource):
-    """
-    A class representing the playlist item's info.
+    """A class representing the playlist item's info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlistItems
     """
 
     snippet: Optional[PlaylistItemSnippet] = field(default=None, repr=False)
-    contentDetails: Optional[PlaylistItemContentDetails] = field(
-        default=None, repr=False
-    )
+    contentDetails: Optional[PlaylistItemContentDetails] = field(default=None, repr=False)
     status: Optional[PlaylistItemStatus] = field(default=None, repr=False)
 
 
 @dataclass
-class PlaylistItemListResponse(BaseApiResponse):
-    """
-    A class representing the playlist item's retrieve response info.
+class PlaylistItemListResponse(BaseList):
+    """A class representing the playlist item's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlistItems/list#response_1
     """
 
-    items: Optional[List[PlaylistItem]] = field(default=None, repr=False)
+    items: list[PlaylistItem] = field(repr=False)

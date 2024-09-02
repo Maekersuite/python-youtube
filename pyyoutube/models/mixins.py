@@ -1,31 +1,15 @@
-"""
-    These are some mixin for models
-"""
-
-import datetime
+from datetime import datetime
 from typing import Optional
 
-import isodate
-from isodate.isoerror import ISO8601Error
 
-from pyyoutube.error import ErrorCode, ErrorMessage, PyYouTubeException
-
-
-class DatetimeTimeMixin:
+class DatetimeTimeMixin:  # noqa: D101
     @staticmethod
-    def string_to_datetime(dt_str: Optional[str]) -> Optional[datetime.datetime]:
-        """
-        Convert datetime string to datetime instance.
-        original string format is YYYY-MM-DDThh:mm:ss.sZ.
-        :return:
+    def string_to_datetime(dt_str: Optional[str]) -> Optional[datetime]:
+        """Convert datetime string to datetime instance.
+
+        The original string format is YYYY-MM-DDThh:mm:ss.sZ.
         """
         if not dt_str:
             return None
-        try:
-            r = isodate.parse_datetime(dt_str)
-        except ISO8601Error as e:
-            raise PyYouTubeException(
-                ErrorMessage(status_code=ErrorCode.INVALID_PARAMS, message=e.args[0])
-            )
-        else:
-            return r
+
+        return datetime.fromisoformat(dt_str)

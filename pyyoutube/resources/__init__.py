@@ -1,20 +1,57 @@
-from .activities import ActivitiesResource  # noqa
-from .captions import CaptionsResource  # noqa
-from .channel_banners import ChannelBannersResource  # noqa
-from .channels import ChannelsResource  # noqa
-from .channel_sections import ChannelSectionsResource  # noqa
-from .comments import CommentsResource  # noqa
-from .comment_threads import CommentThreadsResource  # noqa
-from .i18n_languages import I18nLanguagesResource  # noqa
-from .i18n_regions import I18nRegionsResource  # noqa
-from .members import MembersResource  # noqa
-from .membership_levels import MembershipLevelsResource  # noqa
-from .playlist_items import PlaylistItemsResource  # noqa
-from .playlists import PlaylistsResource  # noqa
-from .search import SearchResource  # noqa
-from .subscriptions import SubscriptionsResource  # noqa
-from .thumbnails import ThumbnailsResource  # noqa
-from .video_abuse_report_reasons import VideoAbuseReportReasonsResource  # noqa
-from .video_categories import VideoCategoriesResource  # noqa
-from .videos import VideosResource  # noqa
-from .watermarks import WatermarksResource  # noqa
+from .captions import CaptionsResource
+from .channel_sections import ChannelSectionsResource
+from .channels import ChannelsResource
+from .comment_threads import CommentThreadsResource
+from .comments import CommentsResource
+from .i18n_languages import I18nLanguagesResource
+from .i18n_regions import I18nRegionsResource
+from .members import MembersResource
+from .membership_levels import MembershipLevelsResource
+from .playlist_items import PlaylistItemsResource
+from .playlists import PlaylistsResource
+from .resource import APIClientProto, Resource
+from .search import SearchResource
+from .subscriptions import SubscriptionsResource
+from .video_abuse_report_reasons import VideoAbuseReportReasonsResource
+from .video_categories import VideoCategoriesResource
+from .videos import VideosResource
+
+resources: list[type[Resource]] = [
+    CaptionsResource,
+    ChannelsResource,
+    ChannelSectionsResource,
+    CommentsResource,
+    CommentThreadsResource,
+    I18nLanguagesResource,
+    I18nRegionsResource,
+    MembersResource,
+    MembershipLevelsResource,
+    PlaylistItemsResource,
+    PlaylistsResource,
+    SearchResource,
+    SubscriptionsResource,
+    VideoAbuseReportReasonsResource,
+    VideoCategoriesResource,
+    VideosResource,
+]
+
+__all__ = [
+    "CaptionsResource",
+    "ChannelsResource",
+    "ChannelSectionsResource",
+    "CommentsResource",
+    "CommentThreadsResource",
+    "I18nLanguagesResource",
+    "I18nRegionsResource",
+    "MembersResource",
+    "MembershipLevelsResource",
+    "PlaylistItemsResource",
+    "PlaylistsResource",
+    "SearchResource",
+    "SubscriptionsResource",
+    "VideoAbuseReportReasonsResource",
+    "VideoCategoriesResource",
+    "VideosResource",
+    "Resource",
+    "APIClientProto",
+]

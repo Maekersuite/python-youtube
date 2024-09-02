@@ -1,19 +1,16 @@
-"""
-    These are search result related models.
-"""
+# ruff: noqa: N815 (YouTube specific attributes)
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional
 
-from .base import BaseModel
-from .common import BaseApiResponse, BaseResource, Thumbnails
+from ..utils.serializable import Serializable
+from .common import BaseList, BaseResource, Thumbnails
 from .mixins import DatetimeTimeMixin
 
 
 @dataclass
-class SearchResultSnippet(BaseModel, DatetimeTimeMixin):
-    """
-    A class representing the search result snippet info.
+class SearchResultSnippet(Serializable, DatetimeTimeMixin):
+    """A class representing the search result snippet info.
 
     Refer: https://developers.google.com/youtube/v3/docs/search#snippet
     """
@@ -28,14 +25,13 @@ class SearchResultSnippet(BaseModel, DatetimeTimeMixin):
 
 
 @dataclass
-class SearchResultId(BaseModel):
-    """
-    A class representing the search result id info.
+class SearchResultId(Serializable):
+    """A class representing the search result id info.
 
     Refer: https://developers.google.com/youtube/v3/docs/search#id
     """
 
-    kind: Optional[str] = field(default=None)
+    kind: str = field()
     videoId: Optional[str] = field(default=None, repr=False)
     channelId: Optional[str] = field(default=None, repr=False)
     playlistId: Optional[str] = field(default=None, repr=False)
@@ -43,23 +39,21 @@ class SearchResultId(BaseModel):
 
 @dataclass
 class SearchResult(BaseResource):
-    """
-    A class representing the search result's info.
+    """A class representing the search result's info.
 
     Refer: https://developers.google.com/youtube/v3/docs/search
     """
 
-    id: Optional[SearchResultId] = field(default=None, repr=False)
-    snippet: Optional[SearchResultSnippet] = field(default=None, repr=False)
+    id: SearchResultId = field(repr=False)
+    snippet: SearchResultSnippet = field(repr=False)
 
 
 @dataclass
-class SearchListResponse(BaseApiResponse):
-    """
-    A class representing the channel's retrieve response info.
+class SearchListResponse(BaseList):
+    """A class representing the channel's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/channels/list#response_1
     """
 
+    items: list[SearchResult] = field(repr=False)
     regionCode: Optional[str] = field(default=None, repr=False)
-    items: Optional[List[SearchResult]] = field(default=None, repr=False)

@@ -1,13 +1,11 @@
-"""
-    Channel resource implementation.
-"""
-
 from typing import Optional, Union
 
-from pyyoutube.error import PyYouTubeException, ErrorMessage, ErrorCode
-from pyyoutube.resources.base_resource import Resource
-from pyyoutube.models import Channel, ChannelListResponse
-from pyyoutube.utils.params_checker import enf_comma_separated, enf_parts
+from ..error import PyYouTubeIncorrectParamsError
+from ..models import ChannelListResponse
+from ..protocols import APIClientProto
+from ..resources.resource import Resource
+from ..utils.params_checker import enf_comma_separated, enf_parts
+from .channel_sections import ChannelSectionsResource
 
 
 class ChannelsResource(Resource):
@@ -16,21 +14,25 @@ class ChannelsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/channels
     """
 
+    sections: ChannelSectionsResource
+
+    def __init__(self, client: APIClientProto) -> None:
+        super().__init__(client)
+        self.sections = ChannelSectionsResource(client)
+
     async def list(
         self,
-        parts: Optional[Union[str, list, tuple, set]] = None,
+        parts: Optional[Union[str, list[str]]] = None,
         for_handle: Optional[str] = None,
         for_username: Optional[str] = None,
-        channel_id: Optional[Union[str, list, tuple, set]] = None,
+        channel_id: Optional[Union[str, list[str]]] = None,
         managed_by_me: Optional[bool] = None,
         mine: Optional[bool] = None,
         hl: Optional[str] = None,
         max_results: Optional[int] = None,
         on_behalf_of_content_owner: Optional[str] = None,
         page_token: Optional[str] = None,
-        return_json: bool = False,
-        **kwargs: Optional[dict],
-    ) -> Union[dict, ChannelListResponse]:
+    ) -> ChannelListResponse:
         """Returns a collection of zero or more channel resources that match the request criteria.
 
         Args:
@@ -76,26 +78,16 @@ class ChannelsResource(Resource):
                 The CMS account that the user authenticates with must be linked to the specified YouTube content owner.
             page_token:
                 The parameter identifies a specific page in the result set that should be returned.
-            return_json:
-                Type for returned data. If you set True JSON data will be returned.
-            **kwargs:
-                Additional parameters for system parameters.
-                Refer: https://cloud.google.com/apis/docs/system-parameters.
 
         Returns:
             Channel data
-        Raises:
-            PyYouTubeException: Missing filter parameter.
-                                Request not success.
         """
-
         params = {
             "part": enf_parts(resource="channels", value=parts),
             "hl": hl,
             "maxResults": max_results,
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             "pageToken": page_token,
-            **kwargs,
         }
         if for_handle is not None:
             params["forHandle"] = for_handle
@@ -108,64 +100,8 @@ class ChannelsResource(Resource):
         elif mine is not None:
             params["mine"] = mine
         else:
-            raise PyYouTubeException(
-                ErrorMessage(
-                    status_code=ErrorCode.MISSING_PARAMS,
-                    message="Specify at least one of for_handle,for_username,channel_id,managedByMe or mine",
-                )
+            raise PyYouTubeIncorrectParamsError(
+                "Specify at least one of for_handle,for_username,channel_id,managedByMe or mine"
             )
 
-        response = await self._client.request(path="channels", params=params)
-        data = await self._client.parse_response(response=response)
-        return data if return_json else ChannelListResponse.from_dict(data)
-
-    async def update(
-        self,
-        part: str,
-        body: Union[dict, Channel],
-        on_behalf_of_content_owner: Optional[str] = None,
-        return_json: bool = False,
-        **kwargs,
-    ) -> Union[dict, Channel]:
-        """Updates a channel's metadata.
-
-        Note that this method currently only supports updates to the channel resource's brandingSettings,
-        invideoPromotion, and localizations objects and their child properties.
-
-        Args:
-            part:
-                The part parameter serves two purposes in this operation. It identifies the properties
-                that the write operation will set as well as the properties that the API response will include.
-            body:
-                Provide channel data in the request body. You can give dataclass or just a dict with data.
-            on_behalf_of_content_owner:
-                The onBehalfOfContentOwner parameter indicates that the request's authorization
-                credentials identify a YouTube CMS user who is acting on behalf of the content
-                owner specified in the parameter value. This parameter is intended for YouTube
-                content partners that own and manage many different YouTube channels. It allows
-                content owners to authenticate once and get access to all their video and channel
-                data, without having to provide authentication credentials for each individual channel.
-                The CMS account that the user authenticates with must be linked to the specified YouTube content owner.
-            return_json:
-                Type for returned data. If you set True JSON data will be returned.
-            **kwargs:
-                Additional parameters for system parameters.
-                Refer: https://cloud.google.com/apis/docs/system-parameters.
-
-        Returns:
-            Channel updated data.
-        """
-
-        params = {
-            "part": part,
-            "onBehalfOfContentOwner": on_behalf_of_content_owner,
-            **kwargs,
-        }
-        response = await self._client.request(
-            method="PUT",
-            path="channels",
-            params=params,
-            json=body,
-        )
-        data = await self._client.parse_response(response=response)
-        return data if return_json else Channel.from_dict(data)
+        return await self._client.list(ChannelListResponse, path="channels", params=params)
