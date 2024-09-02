@@ -15,7 +15,7 @@ class MembersResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/members
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         mode: Optional[str] = None,
@@ -70,6 +70,6 @@ class MembersResource(Resource):
             ),
             **kwargs,
         }
-        response = self._client.request(path="members", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="members", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else MemberListResponse.from_dict(data)

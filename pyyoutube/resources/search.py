@@ -16,7 +16,7 @@ class SearchResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/search
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         for_content_owner: Optional[bool] = None,
@@ -253,6 +253,6 @@ class SearchResource(Resource):
         elif related_to_video_id is not None:
             params["relatedToVideoId"] = related_to_video_id
 
-        response = self._client.request(path="search", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="search", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else SearchListResponse.from_dict(data)

@@ -15,7 +15,7 @@ class MembershipLevelsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/membershipsLevels
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         return_json: bool = False,
@@ -41,6 +41,6 @@ class MembershipLevelsResource(Resource):
             "part": enf_parts(resource="membershipsLevels", value=parts),
             **kwargs,
         }
-        response = self._client.request(path="membershipsLevels", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="membershipsLevels", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else MembershipsLevelListResponse.from_dict(data)

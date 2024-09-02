@@ -16,7 +16,7 @@ class SubscriptionsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/subscriptions
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         channel_id: Optional[str] = None,
@@ -124,15 +124,15 @@ class SubscriptionsResource(Resource):
             raise PyYouTubeException(
                 ErrorMessage(
                     status_code=ErrorCode.MISSING_PARAMS,
-                    message=f"Specify at least one of channel_id,subscription_id,mine,my_recent_subscribers or mySubscribers",
+                    message="Specify at least one of channel_id,subscription_id,mine,my_recent_subscribers or mySubscribers",
                 )
             )
 
-        response = self._client.request(path="subscriptions", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="subscriptions", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else SubscriptionListResponse.from_dict(data)
 
-    def insert(
+    async def insert(
         self,
         body: Union[dict, Subscription],
         parts: Optional[Union[str, list, tuple, set]] = None,
@@ -162,16 +162,16 @@ class SubscriptionsResource(Resource):
             "part": enf_parts(resource="subscriptions", value=parts),
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="POST",
             path="subscriptions",
             params=params,
             json=body,
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else Subscription.from_dict(data)
 
-    def delete(
+    async def delete(
         self,
         subscription_id: str,
         **kwargs: Optional[dict],
@@ -192,9 +192,8 @@ class SubscriptionsResource(Resource):
             "id": subscription_id,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="DELETE", path="subscriptions", params=params
         )
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        return response.ok
+

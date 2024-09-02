@@ -16,7 +16,7 @@ class PlaylistsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/playlists
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         channel_id: Optional[str] = None,
@@ -105,11 +105,11 @@ class PlaylistsResource(Resource):
                     message="Specify at least one of channel_id, playlist_id or mine",
                 )
             )
-        response = self._client.request(path="playlists", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="playlists", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else PlaylistListResponse.from_dict(data)
 
-    def insert(
+    async def insert(
         self,
         body: Union[dict, Playlist],
         parts: Optional[Union[str, list, tuple, set]] = None,
@@ -157,13 +157,13 @@ class PlaylistsResource(Resource):
             "onBehalfOfContentOwnerChannel": on_behalf_of_content_owner_channel,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="POST", path="playlists", params=params, json=body
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else Playlist.from_dict(data)
 
-    def update(
+    async def update(
         self,
         body: Union[dict, Playlist],
         parts: Optional[Union[str, list, tuple, set]] = None,
@@ -202,13 +202,13 @@ class PlaylistsResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="PUT", path="playlists", params=params, json=body
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else Playlist.from_dict(data)
 
-    def delete(
+    async def delete(
         self,
         playlist_id: str,
         on_behalf_of_content_owner: Optional[str] = None,
@@ -240,11 +240,9 @@ class PlaylistsResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="DELETE",
             path="playlists",
             params=params,
         )
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        return response.ok

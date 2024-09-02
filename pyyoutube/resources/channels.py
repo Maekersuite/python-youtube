@@ -16,7 +16,7 @@ class ChannelsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/channels
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         for_handle: Optional[str] = None,
@@ -115,11 +115,11 @@ class ChannelsResource(Resource):
                 )
             )
 
-        response = self._client.request(path="channels", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="channels", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else ChannelListResponse.from_dict(data)
 
-    def update(
+    async def update(
         self,
         part: str,
         body: Union[dict, Channel],
@@ -161,11 +161,11 @@ class ChannelsResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="PUT",
             path="channels",
             params=params,
             json=body,
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else Channel.from_dict(data)

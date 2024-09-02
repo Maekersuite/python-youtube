@@ -16,7 +16,7 @@ class ChannelSectionsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/channelSections
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         channel_id: Optional[str] = None,
@@ -82,11 +82,11 @@ class ChannelSectionsResource(Resource):
                     message="Specify at least one of channel_id, section_id or mine",
                 )
             )
-        response = self._client.request(path="channelSections", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="channelSections", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else ChannelSectionListResponse.from_dict(data)
 
-    def insert(
+    async def insert(
         self,
         body: Union[dict, ChannelSection],
         parts: Optional[Union[str, list, tuple, set]] = None,
@@ -139,16 +139,16 @@ class ChannelSectionsResource(Resource):
             "onBehalfOfContentOwnerChannel": on_behalf_of_content_owner_channel,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="POST",
             path="channelSections",
             params=params,
             json=body,
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else ChannelSection.from_dict(data)
 
-    def update(
+    async def update(
         self,
         body: Union[dict, ChannelSection],
         parts: Optional[Union[str, list, tuple, set]] = None,
@@ -190,16 +190,16 @@ class ChannelSectionsResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="PUT",
             path="channelSections",
             params=params,
             json=body,
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else ChannelSection.from_dict(data)
 
-    def delete(
+    async def delete(
         self,
         section_id: str,
         on_behalf_of_content_owner: Optional[str] = None,
@@ -230,11 +230,9 @@ class ChannelSectionsResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="DELETE",
             path="channelSections",
             params=params,
         )
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        return response.ok

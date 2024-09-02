@@ -16,7 +16,7 @@ class CommentsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/comments
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         comment_id: Optional[Union[str, list, tuple, set]] = None,
@@ -80,11 +80,11 @@ class CommentsResource(Resource):
                 )
             )
 
-        response = self._client.request(path="comments", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="comments", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else CommentListResponse.from_dict(data)
 
-    def insert(
+    async def insert(
         self,
         body: Union[dict, Comment],
         parts: Optional[Union[str, list, tuple, set]] = None,
@@ -112,16 +112,16 @@ class CommentsResource(Resource):
         """
 
         params = {"part": enf_parts(resource="comments", value=parts), **kwargs}
-        response = self._client.request(
+        response = await self._client.request(
             method="POST",
             path="comments",
             params=params,
             json=body,
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else Comment.from_dict(data)
 
-    def update(
+    async def update(
         self,
         body: Union[dict, Comment],
         parts: Optional[Union[str, list, tuple, set]] = None,
@@ -146,16 +146,16 @@ class CommentsResource(Resource):
 
         """
         params = {"part": enf_parts(resource="comments", value=parts), **kwargs}
-        response = self._client.request(
+        response = await self._client.request(
             method="PUT",
             path="comments",
             params=params,
             json=body,
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else Comment.from_dict(data)
 
-    def mark_as_spam(
+    async def mark_as_spam(
         self,
         comment_id: str,
         **kwargs,
@@ -176,16 +176,14 @@ class CommentsResource(Resource):
 
         """
         params = {"id": comment_id, **kwargs}
-        response = self._client.request(
+        response = await self._client.request(
             method="POST",
             path="comments/markAsSpam",
             params=params,
         )
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        return response.ok
 
-    def set_moderation_status(
+    async def set_moderation_status(
         self,
         comment_id: str,
         moderation_status: str,
@@ -220,16 +218,14 @@ class CommentsResource(Resource):
             "banAuthor": ban_author,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="POST",
             path="comments/setModerationStatus",
             params=params,
         )
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        return response.ok
 
-    def delete(
+    async def delete(
         self,
         comment_id: str,
         **kwargs,
@@ -248,11 +244,9 @@ class CommentsResource(Resource):
 
         """
         params = {"id": comment_id, **kwargs}
-        response = self._client.request(
+        response = await self._client.request(
             method="DELETE",
             path="comments",
             params=params,
         )
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        return response.ok

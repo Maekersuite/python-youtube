@@ -1,29 +1,13 @@
-"""
-    New Client for YouTube API
-"""
-
-import inspect
+import aiohttp
+import asyncio
 import json
 from typing import List, Optional, Tuple, Union
-
-import requests
-from requests import Response
-from requests.sessions import merge_setting
-from requests.structures import CaseInsensitiveDict
-from requests_oauthlib.oauth2_session import OAuth2Session
 
 import pyyoutube.resources as resources
 from pyyoutube.models.base import BaseModel
 from pyyoutube.error import ErrorCode, ErrorMessage, PyYouTubeException
-from pyyoutube.models import (
-    AccessToken,
-)
+from pyyoutube.models import AccessToken
 from pyyoutube.resources.base_resource import Resource
-
-
-def _is_resource_endpoint(obj):
-    return isinstance(obj, Resource)
-
 
 class Client:
     """Client for YouTube resource"""
@@ -118,7 +102,7 @@ class Client:
         self.proxies = proxies
         self.headers = headers
 
-        self.session = requests.Session()
+        self.session = aiohttp.ClientSession()
         self.merge_headers()
 
         if not self._has_client_data() and client_secret_path is not None:
@@ -134,8 +118,8 @@ class Client:
                 )
             )
 
-    def _from_client_secrets_file(self, client_secret_path: str):
-        """Set credentials from client_sectet file
+    async def _from_client_secrets_file(self, client_secret_path: str):
+        """Set credentials from client_secret file
 
         Args:
             client_secret_path:
@@ -144,7 +128,6 @@ class Client:
         Raises:
             PyYouTubeException: missing required key, client_secret file not in 'web' format.
         """
-
         with open(client_secret_path, "r") as f:
             secrets_data = json.load(f)
 
@@ -161,7 +144,7 @@ class Client:
                 )
             )
 
-        # check for reqiered fields
+        # check for required fields
         for field in ["client_secret", "client_id"]:
             if field not in credentials:
                 raise PyYouTubeException(
@@ -187,14 +170,10 @@ class Client:
     def merge_headers(self):
         """Merge custom headers to session."""
         if self.headers:
-            self.session.headers = merge_setting(
-                request_setting=self.session.headers,
-                session_setting=self.headers,
-                dict_class=CaseInsensitiveDict,
-            )
+            self.session.headers.update(self.headers)
 
     @staticmethod
-    def parse_response(response: Response) -> dict:
+    async def parse_response(response: aiohttp.ClientResponse) -> dict:
         """Response parser
 
         Args:
@@ -207,12 +186,12 @@ class Client:
         Raises:
             PyYouTubeException: If response has errors.
         """
-        data = response.json()
+        data = await response.json()
         if "error" in data:
             raise PyYouTubeException(response)
         return data
 
-    def request(
+    async def request(
         self,
         path: str,
         method: str = "GET",
@@ -271,23 +250,21 @@ class Client:
         if isinstance(json, BaseModel):
             json = json.to_dict_ignore_none()
 
-        try:
-            response = self.session.request(
-                method=method,
-                url=path,
-                params=params,
-                data=data,
-                json=json,
-                proxies=self.proxies,
-                timeout=self.timeout,
-                **kwargs,
-            )
-        except requests.HTTPError as e:
-            raise PyYouTubeException(
-                ErrorMessage(status_code=ErrorCode.HTTP_ERROR, message=e.args[0])
-            )
-        else:
-            return response
+        async with self.session.request(
+            method=method,
+            url=path,
+            params=params,
+            data=data,
+            json=json,
+            proxy=self.proxies,
+            timeout=self.timeout,
+            **kwargs,
+        ) as response:
+            if response.status != 200:
+                raise PyYouTubeException(
+                    ErrorMessage(status_code=ErrorCode.HTTP_ERROR, message=await response.text())
+                )
+            return await self.parse_response(response)
 
     def add_token_to_headers(self):
         if self.access_token:
@@ -304,13 +281,13 @@ class Client:
             params["key"] = self.api_key
         return params
 
-    def _get_oauth_session(
+    async def _get_oauth_session(
         self,
         redirect_uri: Optional[str] = None,
         scope: Optional[List[str]] = None,
         state: Optional[str] = None,
         **kwargs,
-    ) -> OAuth2Session:
+    ) -> aiohttp.ClientSession:
         """Build request session for authorization
 
         Args:
@@ -321,7 +298,7 @@ class Client:
                 Permission scope for authorization.
                 see more: https://developers.google.com/identity/protocols/oauth2/scopes#youtube
             state:
-                State sting for authorization.
+                State string for authorization.
             **kwargs:
                 Additional parameters for session.
 
@@ -334,15 +311,17 @@ class Client:
         scope = scope if scope is not None else self.DEFAULT_SCOPE
         state = state if state is not None else self.DEFAULT_STATE
 
-        return OAuth2Session(
-            client_id=self.client_id,
-            scope=scope,
-            redirect_uri=redirect_uri,
-            state=state,
-            **kwargs,
+        return aiohttp.ClientSession(
+            headers={
+                "client_id": self.client_id,
+                "scope": " ".join(scope),
+                "redirect_uri": redirect_uri,
+                "state": state,
+                **kwargs,
+            }
         )
 
-    def get_authorize_url(
+    async def get_authorize_url(
         self,
         redirect_uri: Optional[str] = None,
         scope: Optional[List[str]] = None,
@@ -396,7 +375,7 @@ class Client:
         References:
             https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps
         """
-        session = self._get_oauth_session(
+        session = await self._get_oauth_session(
             redirect_uri=redirect_uri,
             scope=scope,
             state=state,
@@ -411,7 +390,7 @@ class Client:
         )
         return authorize_url, state
 
-    def generate_access_token(
+    async def generate_access_token(
         self,
         authorization_response: Optional[str] = None,
         code: Optional[str] = None,
@@ -443,24 +422,24 @@ class Client:
         Returns:
             Access token data.
         """
-        session = self._get_oauth_session(
+        session = await self._get_oauth_session(
             redirect_uri=redirect_uri,
             scope=scope,
             state=state,
             **kwargs,
         )
-        token = session.fetch_token(
+        token = await session.fetch_token(
             token_url=self.EXCHANGE_ACCESS_TOKEN_URL,
             client_secret=self.client_secret,
             authorization_response=authorization_response,
             code=code,
-            proxies=self.proxies,
+            proxy=self.proxies,
         )
         self.access_token = token["access_token"]
         self.refresh_token = token.get("refresh_token")
         return token if return_json else AccessToken.from_dict(token)
 
-    def refresh_access_token(
+    async def refresh_access_token(
         self, refresh_token: str, return_json: bool = False, **kwargs
     ) -> Union[dict, AccessToken]:
         """Refresh new access token.
@@ -476,7 +455,7 @@ class Client:
         Returns:
             Access token data.
         """
-        response = self.request(
+        response = await self.request(
             method="POST",
             path=self.EXCHANGE_ACCESS_TOKEN_URL,
             data={
@@ -488,10 +467,10 @@ class Client:
             enforce_auth=False,
             **kwargs,
         )
-        data = self.parse_response(response)
+        data = await self.parse_response(response)
         return data if return_json else AccessToken.from_dict(data)
 
-    def revoke_access_token(
+    async def revoke_access_token(
         self,
         token: str,
     ) -> bool:
@@ -511,12 +490,10 @@ class Client:
         Raises:
             PyYouTubeException: When occur errors.
         """
-        response = self.request(
+        response = await self.request(
             method="POST",
             path=self.REVOKE_TOKEN_URL,
             params={"token": token},
             enforce_auth=False,
         )
-        if response.ok:
-            return True
-        self.parse_response(response)
+        return response.ok

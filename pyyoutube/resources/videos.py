@@ -22,7 +22,7 @@ class VideosResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/videos
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         chart: Optional[str] = None,
@@ -118,8 +118,8 @@ class VideosResource(Resource):
                     message="Specify at least one of chart,video_id or my_rating",
                 )
             )
-        response = self._client.request(path="videos", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="videos", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else VideoListResponse.from_dict(data)
 
     def insert(
@@ -216,7 +216,7 @@ class VideosResource(Resource):
         )
         return media_upload
 
-    def update(
+    async def update(
         self,
         body: Union[dict, Video],
         parts: Optional[Union[str, list, tuple, set]] = None,
@@ -256,16 +256,16 @@ class VideosResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="PUT",
             path="videos",
             params=params,
             json=body,
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else Video.from_dict(data)
 
-    def rate(
+    async def rate(
         self,
         video_id: str,
         rating: Optional[str] = None,
@@ -294,16 +294,14 @@ class VideosResource(Resource):
             "rating": rating,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="POST",
             path="videos/rate",
             params=params,
         )
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        return response.ok
 
-    def get_rating(
+    async def get_rating(
         self,
         video_id: Union[str, list, tuple, set],
         on_behalf_of_content_owner: Optional[str] = None,
@@ -338,11 +336,11 @@ class VideosResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(path="videos/getRating", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="videos/getRating", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else VideoGetRatingResponse.from_dict(data)
 
-    def report_abuse(
+    async def report_abuse(
         self,
         body: Optional[Union[dict, VideoReportAbuse]],
         on_behalf_of_content_owner: Optional[str] = None,
@@ -372,17 +370,15 @@ class VideosResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="POST",
             path="videos/reportAbuse",
             params=params,
             json=body,
         )
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        return response.ok
 
-    def delete(
+    async def delete(
         self,
         video_id: str,
         on_behalf_of_content_owner: Optional[str] = None,
@@ -413,11 +409,9 @@ class VideosResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="DELETE",
             path="videos",
             params=params,
         )
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        return response.ok

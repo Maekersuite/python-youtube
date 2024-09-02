@@ -16,7 +16,7 @@ class I18nRegionsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/i18nRegions
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         hl: Optional[str] = None,
@@ -46,6 +46,6 @@ class I18nRegionsResource(Resource):
             "hl": hl,
             **kwargs,
         }
-        response = self._client.request(path="i18nRegions", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="i18nRegions", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else I18nRegionListResponse.from_dict(data)

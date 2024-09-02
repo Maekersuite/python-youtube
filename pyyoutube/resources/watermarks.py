@@ -57,7 +57,7 @@ class WatermarksResource(Resource):
         )
         return media_upload
 
-    def unset(
+    async def unset(
         self,
         channel_id: str,
         on_behalf_of_content_owner: Optional[str] = None,
@@ -88,11 +88,10 @@ class WatermarksResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             method="POST",
             path="watermarks/unset",
             params=params,
         )
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        return response.ok
+

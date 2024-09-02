@@ -16,7 +16,7 @@ class VideoAbuseReportReasonsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/videoAbuseReportReasons
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         hl: Optional[str] = None,
@@ -46,8 +46,8 @@ class VideoAbuseReportReasonsResource(Resource):
             "hl": hl,
             **kwargs,
         }
-        response = self._client.request(path="videoAbuseReportReasons", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="videoAbuseReportReasons", params=params)
+        data = await self._client.parse_response(response=response)
         return (
             data if return_json else VideoAbuseReportReasonListResponse.from_dict(data)
         )

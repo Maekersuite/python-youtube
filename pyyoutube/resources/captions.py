@@ -4,8 +4,6 @@
 
 from typing import Optional, Union
 
-from requests import Response
-
 from pyyoutube.resources.base_resource import Resource
 from pyyoutube.media import Media, MediaUpload
 from pyyoutube.models import Caption, CaptionListResponse
@@ -18,7 +16,7 @@ class CaptionsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/captions
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         video_id: Optional[str] = None,
@@ -58,8 +56,8 @@ class CaptionsResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
             **kwargs,
         }
-        response = self._client.request(path="captions", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="captions", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else CaptionListResponse.from_dict(data)
 
     def insert(
@@ -115,7 +113,7 @@ class CaptionsResource(Resource):
         )
         return media_upload
 
-    def update(
+    async def update(
         self,
         body: Union[dict, Caption],
         media: Optional[Media] = None,
@@ -171,16 +169,16 @@ class CaptionsResource(Resource):
             )
             return media_upload
 
-        response = self._client.request(
+        response = await self._client.request(
             method="PUT",
             path="captions",
             params=params,
             json=body,
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else Caption.from_dict(data)
 
-    def download(
+    async def download(
         self,
         caption_id: str,
         on_behalf_of_content_owner: Optional[str] = None,
@@ -220,13 +218,13 @@ class CaptionsResource(Resource):
             "tlang": tlang,
             **kwargs,
         }
-        response = self._client.request(
+        response = await self._client.request(
             path=f"captions/{caption_id}",
             params=params,
         )
         return response
 
-    def delete(
+    async def delete(
         self,
         caption_id: str,
         on_behalf_of_content_owner: Optional[str] = None,
@@ -256,7 +254,5 @@ class CaptionsResource(Resource):
             **kwargs,
         }
 
-        response = self._client.request(path="captions", method="DELETE", params=params)
-        if response.ok:
-            return True
-        self._client.parse_response(response=response)
+        response = await self._client.request(path="captions", method="DELETE", params=params)
+        return response.ok

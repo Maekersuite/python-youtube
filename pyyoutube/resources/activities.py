@@ -17,7 +17,7 @@ class ActivitiesResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/activities
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         channel_id: Optional[str] = None,
@@ -85,6 +85,6 @@ class ActivitiesResource(Resource):
                 )
             )
 
-        response = self._client.request(path="activities", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="activities", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else ActivityListResponse.from_dict(data)

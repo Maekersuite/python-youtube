@@ -17,7 +17,7 @@ class CommentThreadsResource(Resource):
     References: https://developers.google.com/youtube/v3/docs/commentThreads
     """
 
-    def list(
+    async def list(
         self,
         parts: Optional[Union[str, list, tuple, set]] = None,
         all_threads_related_to_channel_id: Optional[str] = None,
@@ -111,11 +111,11 @@ class CommentThreadsResource(Resource):
                     message="Specify at least one of all_threads_related_to_channel_id,channel_id,thread_id or video_id",
                 )
             )
-        response = self._client.request(path="commentThreads", params=params)
-        data = self._client.parse_response(response=response)
+        response = await self._client.request(path="commentThreads", params=params)
+        data = await self._client.parse_response(response=response)
         return data if return_json else CommentThreadListResponse.from_dict(data)
 
-    def insert(
+    async def insert(
         self,
         body: Union[dict, CommentThread],
         parts: Optional[Union[str, list, tuple, set]] = None,
@@ -146,11 +146,11 @@ class CommentThreadsResource(Resource):
             **kwargs,
         }
 
-        response = self._client.request(
+        response = await self._client.request(
             method="POST",
             path="commentThreads",
             params=params,
             json=body,
         )
-        data = self._client.parse_response(response=response)
+        data = await self._client.parse_response(response=response)
         return data if return_json else CommentThread.from_dict(data)
