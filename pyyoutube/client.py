@@ -1,5 +1,4 @@
 import aiohttp
-import asyncio
 import json
 from typing import List, Optional, Tuple, Union
 
@@ -7,7 +6,6 @@ import pyyoutube.resources as resources
 from pyyoutube.models.base import BaseModel
 from pyyoutube.error import ErrorCode, ErrorMessage, PyYouTubeException
 from pyyoutube.models import AccessToken
-from pyyoutube.resources.base_resource import Resource
 
 class Client:
     """Client for YouTube resource"""
