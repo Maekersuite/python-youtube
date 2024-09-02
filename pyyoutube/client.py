@@ -9,6 +9,15 @@ from pyyoutube.error import ErrorCode, ErrorMessage, PyYouTubeException
 from pyyoutube.models import AccessToken
 
 def _is_resource_endpoint(attr):
+    """
+    Checks if a given attribute is an instance of a resource endpoint.
+
+    Args:
+        attr: The attribute to check.
+
+    Returns:
+        bool: True if the attribute is an instance of a resource endpoint, False otherwise.
+    """
     return isinstance(attr, resources.Resource)
 
 class Client:
@@ -49,13 +58,22 @@ class Client:
     watermarks = resources.WatermarksResource()
 
     def __new__(cls, *args, **kwargs):
+        # Create a new instance of the class
         self = super().__new__(cls)
+
+        # Get all attributes of the instance that are resource endpoints
         sub_resources = inspect.getmembers(self, _is_resource_endpoint)
+
+        # Iterate over each resource endpoint
         for name, resource in sub_resources:
+            # Get the class of the resource
             resource_cls = type(resource)
+            # Reinitialize the resource with the current instance of the client
             resource = resource_cls(self)
+            # Set the reinitialized resource back to the instance
             setattr(self, name, resource)
 
+        # Return the newly created instance
         return self
 
     def __init__(
