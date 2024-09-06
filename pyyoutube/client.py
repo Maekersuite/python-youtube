@@ -1,16 +1,18 @@
 import asyncio
+from contextlib import suppress
 from dataclasses import dataclass
-from typing import ClassVar, Optional, TypeVar
+from typing import Any, ClassVar, Never, Optional, TypeVar
 
 import orjson
 from aiohttp import (
+    ClientResponse,
     ClientSession,
     ClientTimeout,
     TCPConnector,
     TraceConfig,
 )
 
-from .error import PyYouTubeServiceError, PyYouTubeSessionError
+from .error import PyYouTubeForbiddenError, PyYouTubeQuotaReachedError, PyYouTubeServiceError, PyYouTubeSessionError
 from .protocols import APIClientProto
 from .resources import (
     CaptionsResource,
@@ -49,6 +51,15 @@ class APIKeyAuthentication(AuthenticationMethod):
     api_key: str
 
 
+@dataclass
+class YouTubeDataAPIError:
+    """A class representing the error object from the YouTube Data API."""
+
+    message: str
+    domain: str
+    reason: str
+
+
 class Client(APIClientProto):
     """YouTube Data API v3 client. Allows getting structured resources from the API."""
 
@@ -69,7 +80,7 @@ class Client(APIClientProto):
     subscriptions: SubscriptionsResource
     videos: VideosResource
 
-    session: ClientSession
+    session: ClientSession | None = None
     """Current session for the API requests. Can be created manually or using context manager."""
 
     concurrent_connections: int = 100
@@ -110,24 +121,60 @@ class Client(APIClientProto):
         self.subscriptions = SubscriptionsResource(self)
         self.videos = VideosResource(self)
 
+        if isinstance(self.auth, AccessTokenAuthentication):
+            self.headers.update({"Authorization": f"Bearer {self.auth.access_token}"})
+
+    async def __aenter__(self) -> "Client":
+        """Async context manager entry point."""
         self.tracer = TraceConfig()
         self.connector = TCPConnector(limit=self.concurrent_connections, keepalive_timeout=30, ttl_dns_cache=300)
         self.session = ClientSession(
             timeout=self.timeout, trace_configs=[self.tracer], connector=self.connector, headers=self.headers
         )
 
-        if isinstance(self.auth, AccessTokenAuthentication):
-            self.session.headers.update({"Authorization": f"Bearer {self.auth.access_token}"})
-
-    async def __aenter__(self) -> "Client":
-        """Async context manager entry point."""
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback) -> None:  # noqa: ANN001
         """Async context manager exit point. Closes the session if it's still open."""
-        if not self.session.closed:
+        if self.session and not self.session.closed:
             await self.session.close()
         await asyncio.sleep(0)
+
+    def _handle_response_errors(self, code: int, error: YouTubeDataAPIError) -> Never:
+        """Handle the errors from the YouTube Data API. Docs: https://developers.google.com/youtube/v3/docs/errors."""
+        if error.reason == "quotaExceeded":
+            raise PyYouTubeQuotaReachedError(code, error.message)
+        elif error.reason == "forbidden":
+            raise PyYouTubeForbiddenError(code, error.message)
+        else:
+            raise PyYouTubeServiceError(code, error.message)
+
+    async def _handle_error(self, response: ClientResponse) -> None:
+        status: int = response.status
+
+        data: dict[str, Any] | None = None
+        with suppress(Exception):
+            data = await response.json(loads=orjson.loads)
+
+        if not data:
+            raise PyYouTubeServiceError(status, "Unknown YouTube Data API error")
+
+        try:
+            errors: list[YouTubeDataAPIError] = []
+            if status >= 400:  # noqa: PLR2004
+                code: int = data["error"]["code"]
+                errors = [
+                    YouTubeDataAPIError(message=error["message"], domain=error["domain"], reason=error["reason"])
+                    for error in data["error"]["errors"]
+                ]
+        except Exception as ex:
+            raise PyYouTubeServiceError(status, "Unknown YouTube Data API error") from ex
+
+        if not errors:
+            raise PyYouTubeServiceError(status, "Unknown YouTube Data API error")
+
+        for error in errors:
+            self._handle_response_errors(code, error)
 
     async def list(
         self,
@@ -176,11 +223,7 @@ class Client(APIClientProto):
         ):
             # Handle the response
             if response.status != 200:  # noqa: PLR2004
-                try:
-                    error = await response.text()
-                except Exception:
-                    error = "Unable to read error message"
-                raise PyYouTubeServiceError(response.status, error)
+                await self._handle_error(response)
 
             try:
                 data: dict[str, str] = await response.json(loads=orjson.loads)
