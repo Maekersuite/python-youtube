@@ -32,6 +32,7 @@ class ChannelsResource(Resource):
         max_results: Optional[int] = None,
         on_behalf_of_content_owner: Optional[str] = None,
         page_token: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> ChannelListResponse:
         """Returns a collection of zero or more channel resources that match the request criteria.
 
@@ -78,6 +79,8 @@ class ChannelsResource(Resource):
                 The CMS account that the user authenticates with must be linked to the specified YouTube content owner.
             page_token:
                 The parameter identifies a specific page in the result set that should be returned.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Channel data
@@ -104,4 +107,4 @@ class ChannelsResource(Resource):
                 "Specify at least one of for_handle,for_username,channel_id,managedByMe or mine"
             )
 
-        return await self._client.list(ChannelListResponse, path="channels", params=params)
+        return await self._client.list(ChannelListResponse, path="channels", params=params, api_key=api_key)

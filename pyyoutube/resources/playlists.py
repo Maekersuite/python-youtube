@@ -31,6 +31,7 @@ class PlaylistsResource(Resource):
         on_behalf_of_content_owner: Optional[str] = None,
         on_behalf_of_content_owner_channel: Optional[str] = None,
         page_token: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> PlaylistListResponse:
         """Returns a collection of playlists that match the API request parameters.
 
@@ -73,6 +74,8 @@ class PlaylistsResource(Resource):
                 owner that the onBehalfOfContentOwner parameter specifies.
             page_token:
                 The parameter identifies a specific page in the result set that should be returned.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Playlist data.
@@ -94,4 +97,4 @@ class PlaylistsResource(Resource):
         else:
             raise PyYouTubeIncorrectParamsError("Specify at least one of channel_id, playlist_id or mine")
 
-        return await self._client.list(PlaylistListResponse, "playlists", params)
+        return await self._client.list(PlaylistListResponse, "playlists", params, api_key=api_key)

@@ -26,6 +26,7 @@ class PlaylistItemsResource(Resource):
         on_behalf_of_content_owner: Optional[str] = None,
         page_token: Optional[str] = None,
         video_id: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> PlaylistItemListResponse:
         """Returns a collection of playlist items that match the API request parameters.
 
@@ -53,6 +54,8 @@ class PlaylistItemsResource(Resource):
                 The parameter identifies a specific page in the result set that should be returned.
             video_id:
                 Specifies that the request should return only the playlist items that contain the specified video.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Playlist items data.
@@ -71,4 +74,4 @@ class PlaylistItemsResource(Resource):
         else:
             raise PyYouTubeIncorrectParamsError("Specify at least one of playlist_item_id or playlist_id")
 
-        return await self._client.list(PlaylistItemListResponse, "playlistItems", params)
+        return await self._client.list(PlaylistItemListResponse, "playlistItems", params, api_key=api_key)

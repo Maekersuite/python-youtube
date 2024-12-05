@@ -20,6 +20,7 @@ class ChannelSectionsResource(Resource):
         mine: Optional[bool] = None,
         hl: Optional[str] = None,
         on_behalf_of_content_owner: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> ChannelSectionListResponse:
         """Returns a list of channelSection resources that match the API request criteria.
 
@@ -44,6 +45,8 @@ class ChannelSectionsResource(Resource):
                 content owners to authenticate once and get access to all their video and channel
                 data, without having to provide authentication credentials for each individual channel.
                 The CMS account that the user authenticates with must be linked to the specified YouTube content owner.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Channel section data.
@@ -62,4 +65,4 @@ class ChannelSectionsResource(Resource):
         else:
             raise PyYouTubeIncorrectParamsError("Specify at least one of channel_id, section_id or mine")
 
-        return await self._client.list(ChannelSectionListResponse, path="channelSections", params=params)
+        return await self._client.list(ChannelSectionListResponse, path="channelSections", params=params, api_key=api_key)

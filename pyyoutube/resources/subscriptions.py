@@ -26,6 +26,7 @@ class SubscriptionsResource(Resource):
         on_behalf_of_content_owner_channel: Optional[str] = None,
         order: Optional[str] = None,
         page_token: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> SubscriptionListResponse:
         """Returns subscription resources that match the API request criteria.
 
@@ -77,6 +78,8 @@ class SubscriptionsResource(Resource):
                     - unread: Sort by order of activity.
             page_token:
                 The parameter identifies a specific page in the result set that should be returned.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Subscriptions data.
@@ -106,4 +109,4 @@ class SubscriptionsResource(Resource):
                 "Specify at least one of channel_id,subscription_id,mine,my_recent_subscribers or mySubscribers"
             )
 
-        return await self._client.list(SubscriptionListResponse, "subscriptions", params)
+        return await self._client.list(SubscriptionListResponse, "subscriptions", params, api_key=api_key)

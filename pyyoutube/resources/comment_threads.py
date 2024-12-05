@@ -25,6 +25,7 @@ class CommentThreadsResource(Resource):
         page_token: Optional[str] = None,
         search_terms: Optional[str] = None,
         text_format: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> CommentThreadListResponse:
         """Returns a list of comment threads that match the API request parameters.
 
@@ -67,6 +68,8 @@ class CommentThreadsResource(Resource):
                     - html: Returns the comments in HTML format. This is the default value.
                     - plainText: Returns the comments in plain text format.
                 Notes: This parameter is not supported for use in conjunction with the `id` parameter.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Comment threads data.
@@ -94,4 +97,4 @@ class CommentThreadsResource(Resource):
                 "Specify at least one of all_threads_related_to_channel_id,channel_id,thread_id or video_id"
             )
 
-        return await self._client.list(CommentThreadListResponse, path="commentThreads", params=params)
+        return await self._client.list(CommentThreadListResponse, path="commentThreads", params=params, api_key=api_key)

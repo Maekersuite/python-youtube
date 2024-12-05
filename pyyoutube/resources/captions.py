@@ -17,6 +17,7 @@ class CaptionsResource(Resource):
         video_id: Optional[str] = None,
         caption_id: Optional[Union[str, list[str]]] = None,
         on_behalf_of_content_owner: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> CaptionListResponse:
         """Returns a list of caption tracks that are associated with a specified video.
 
@@ -32,6 +33,8 @@ class CaptionsResource(Resource):
             on_behalf_of_content_owner:
                 This parameter can only be used in a properly authorized request.
                 Note: This parameter is intended exclusively for YouTube content partners.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Caption data
@@ -43,4 +46,4 @@ class CaptionsResource(Resource):
             "onBehalfOfContentOwner": on_behalf_of_content_owner,
         }
 
-        return await self._client.list(CaptionListResponse, path="captions", params=params)
+        return await self._client.list(CaptionListResponse, path="captions", params=params, api_key=api_key)

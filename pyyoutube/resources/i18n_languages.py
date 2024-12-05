@@ -19,6 +19,7 @@ class I18nLanguagesResource(Resource):
         self,
         parts: Optional[Union[str, list[str]]] = None,
         hl: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> I18nLanguageListResponse:
         """Returns a list of application languages that the YouTube website supports.
 
@@ -29,6 +30,8 @@ class I18nLanguagesResource(Resource):
             hl:
                 Specifies the language that should be used for text values in the API response.
                 The default value is en_US.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             i18n language data
@@ -38,4 +41,4 @@ class I18nLanguagesResource(Resource):
             "hl": hl,
         }
 
-        return await self._client.list(I18nLanguageListResponse, "i18nLanguages", params)
+        return await self._client.list(I18nLanguageListResponse, "i18nLanguages", params, api_key=api_key)

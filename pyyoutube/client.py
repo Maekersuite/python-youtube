@@ -181,6 +181,7 @@ class Client(APIClientProto):
         resource: type[T],
         path: str,
         params: dict[str, str],
+        api_key: Optional[str] = None,
     ) -> T:
         """Make a request to the YouTube Data API v3 and return the deserialized response.
 
@@ -188,6 +189,7 @@ class Client(APIClientProto):
             resource (type[T]): The Serializable class to deserialize the response into.
             path (str): The API endpoint path.
             params (dict[str, str]): Query parameters for the request.
+            api_key (Optional[str]): The API key to use for the request.
 
         Returns:
             T: The deserialized response.
@@ -205,7 +207,9 @@ class Client(APIClientProto):
             path = f"{self.base_url}{path}"
 
         # Add API key to params if using APIKeyAuthentication
-        if params and isinstance(self.auth, APIKeyAuthentication):
+        if api_key:
+            params.update({"key": api_key})
+        elif params and isinstance(self.auth, APIKeyAuthentication):
             params.update({"key": self.auth.api_key})
 
         # Remove None values from params

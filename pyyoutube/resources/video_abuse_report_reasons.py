@@ -15,6 +15,7 @@ class VideoAbuseReportReasonsResource(Resource):
         self,
         parts: Optional[Union[str, list[str]]] = None,
         hl: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> VideoAbuseReportReasonListResponse:
         """Retrieve a list of reasons that can be used to report abusive videos.
 
@@ -25,6 +26,8 @@ class VideoAbuseReportReasonsResource(Resource):
             hl:
                 Specifies the language that should be used for text values in the API response.
                 The default value is en_US.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             reasons data.
@@ -34,4 +37,6 @@ class VideoAbuseReportReasonsResource(Resource):
             "hl": hl,
         }
 
-        return await self._client.list(VideoAbuseReportReasonListResponse, "videoAbuseReportReasons", params)
+        return await self._client.list(
+            VideoAbuseReportReasonListResponse, "videoAbuseReportReasons", params, api_key=api_key
+        )

@@ -45,6 +45,7 @@ class SearchResource(Resource):
         video_paid_product_placement: Optional[str] = None,
         video_syndicated: Optional[str] = None,
         video_type: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> SearchListResponse:
         """Returns a collection of search results that match the query parameters specified in the API request.
 
@@ -195,6 +196,8 @@ class SearchResource(Resource):
                     - any: Return all videos.
                     - episode: Only retrieve episodes of shows.
                     - movie: Only retrieve movies.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Search result data
@@ -240,4 +243,4 @@ class SearchResource(Resource):
         elif related_to_video_id is not None:
             params["relatedToVideoId"] = related_to_video_id
 
-        return await self._client.list(SearchListResponse, "search", params)
+        return await self._client.list(SearchListResponse, "search", params, api_key=api_key)

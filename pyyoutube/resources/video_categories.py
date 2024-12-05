@@ -20,6 +20,7 @@ class VideoCategoriesResource(Resource):
         category_id: Optional[Union[str, list[str]]] = None,
         region_code: Optional[str] = None,
         hl: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> VideoCategoryListResponse:
         """Returns a list of categories that can be associated with YouTube videos.
 
@@ -35,6 +36,8 @@ class VideoCategoriesResource(Resource):
             hl:
                 Specifies the language that should be used for text values in the API response.
                 The default value is en_US.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Video category data.
@@ -51,4 +54,4 @@ class VideoCategoriesResource(Resource):
         else:
             raise PyYouTubeIncorrectParamsError("Specify at least one of category_id or region_code")
 
-        return await self._client.list(VideoCategoryListResponse, "videoCategories", params)
+        return await self._client.list(VideoCategoryListResponse, "videoCategories", params, api_key=api_key)

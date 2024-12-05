@@ -27,6 +27,7 @@ class MembersResource(Resource):
         page_token: Optional[str] = None,
         has_access_to_level: Optional[str] = None,
         filter_by_member_channel_id: Optional[Union[str, list[str]]] = None,
+        api_key: Optional[str] = None,
     ) -> MemberListResponse:
         """Lists members (formerly known as "sponsors") for a channel.
 
@@ -51,6 +52,8 @@ class MembersResource(Resource):
                 specifies a comma-separated list of channel IDs that can be used to check the membership
                 status of specific users.
                 Maximum of 100 channels can be specified per call.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Members data.
@@ -66,4 +69,4 @@ class MembersResource(Resource):
             ),
         }
 
-        return await self._client.list(MemberListResponse, path="members", params=params)
+        return await self._client.list(MemberListResponse, path="members", params=params, api_key=api_key)

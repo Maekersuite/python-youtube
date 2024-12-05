@@ -41,6 +41,7 @@ class VideosResource(Resource):
         page_token: Optional[str] = None,
         region_code: Optional[str] = None,
         video_category_id: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> VideoListResponse:
         """Returns a list of videos that match the API request parameters.
 
@@ -85,6 +86,8 @@ class VideosResource(Resource):
                 Instructs the API to select a video chart available in the specified region.
             video_category_id:
                 Identifies the video category for which the chart should be retrieved.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Videos data.
@@ -109,4 +112,4 @@ class VideosResource(Resource):
         else:
             raise PyYouTubeIncorrectParamsError("Specify at least one of chart,video_id or my_rating")
 
-        return await self._client.list(VideoListResponse, path="videos", params=params)
+        return await self._client.list(VideoListResponse, path="videos", params=params, api_key=api_key)

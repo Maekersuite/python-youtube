@@ -30,6 +30,7 @@ class CommentsResource(Resource):
         max_results: Optional[int] = None,
         text_format: Optional[str] = None,
         page_token: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> CommentListResponse:
         """Returns a list of comments that match the API request parameters.
 
@@ -53,6 +54,8 @@ class CommentsResource(Resource):
                     - plainText: Returns the comments in plain text format.
             page_token:
                 The parameter identifies a specific page in the result set that should be returned.
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Comments data
@@ -70,4 +73,4 @@ class CommentsResource(Resource):
         else:
             raise PyYouTubeIncorrectParamsError("Specify at least one of comment_id, or parent_id")
 
-        return await self._client.list(CommentListResponse, "comments", params)
+        return await self._client.list(CommentListResponse, "comments", params, api_key=api_key)

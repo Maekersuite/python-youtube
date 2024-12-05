@@ -14,6 +14,7 @@ class MembershipLevelsResource(Resource):
     async def list(
         self,
         parts: Optional[Union[str, list[str]]] = None,
+        api_key: Optional[str] = None,
     ) -> MembershipsLevelListResponse:
         """Lists membership levels for the channel that authorized the request.
 
@@ -21,6 +22,8 @@ class MembershipLevelsResource(Resource):
             parts:
                 Comma-separated list of one or more channel resource properties.
                 Accepted values: id,snippet
+            api_key:
+                The API key to use for the request.
 
         Returns:
             Membership levels data.
@@ -30,4 +33,4 @@ class MembershipLevelsResource(Resource):
             "part": enf_parts(resource="membershipsLevels", value=parts),
         }
 
-        return await self._client.list(MembershipsLevelListResponse, "membershipsLevels", params)
+        return await self._client.list(MembershipsLevelListResponse, "membershipsLevels", params, api_key=api_key)
