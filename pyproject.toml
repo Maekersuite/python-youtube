@@ -14,7 +14,7 @@ dependencies = [
     "orjson>=3.10.7",
 ]
 readme = "README.md"
-requires-python = ">= 3.9"
+requires-python = ">= 3.12"
 homepage = "https://github.com/Maekersuite/python-youtube"
 repository = "https://github.com/Maekersuite/python-youtube"
 classifiers = [

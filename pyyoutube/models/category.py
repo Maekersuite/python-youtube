@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from ..utils.serializable import Serializable
-from .common import BaseList, BaseResource
+from .common import BaseList, BaseResource, PaginationResponse
 
 
 @dataclass
@@ -36,7 +36,7 @@ class VideoCategory(BaseResource):
 
 
 @dataclass
-class VideoCategoryListResponse(BaseList):
+class VideoCategoryListResponse(BaseList, PaginationResponse):
     """A class representing the video category's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videoCategories/list#response_1

@@ -10,6 +10,7 @@ from .common import (
     BaseResource,
     BaseTopicDetails,
     Localized,
+    PaginationResponse,
     Player,
     Thumbnails,
 )
@@ -229,7 +230,7 @@ class Video(BaseResource):
 
 
 @dataclass
-class VideoListResponse(BaseList):
+class VideoListResponse(BaseList, PaginationResponse):
     """A class representing the video's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videos/list#response_1

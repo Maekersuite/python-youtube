@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from ..utils.serializable import Serializable
-from .common import BaseList, BaseResource, Thumbnails
+from .common import BaseList, BaseResource, PaginationResponse, Thumbnails
 from .mixins import DatetimeTimeMixin
 
 
@@ -49,7 +49,7 @@ class SearchResult(BaseResource):
 
 
 @dataclass
-class SearchListResponse(BaseList):
+class SearchListResponse(BaseList, PaginationResponse):
     """A class representing the channel's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/channels/list#response_1

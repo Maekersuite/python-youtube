@@ -4,7 +4,7 @@ An async implementation of Python API for YouTube Data V3 based on: [python-yout
 
 __NOTE__: It's a breaking fork. A lot of functionality has been removed or completely refactored. This fork doesn't support Media uploads, the old API client, `update`, `delete`, `insert` API operations. It only works with `dataclasses`. It is intended to be a performant and robust client to **retrieve** resources from the API only.
 
-Compatible with Python 3.9+.
+Compatible with Python 3.12+.
 
 ## Features
 

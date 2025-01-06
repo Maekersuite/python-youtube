@@ -9,6 +9,7 @@ from pyyoutube.models import (
     ChannelStatus,
     RelatedPlaylists,
 )
+from pyyoutube.models.common import PageInfo
 
 test = ChannelListResponse(
     kind="youtube#channelListResponse",
@@ -30,6 +31,12 @@ test = ChannelListResponse(
             ),
         ),
     ],
+    pageInfo=PageInfo(
+        totalResults=1,
+        resultsPerPage=1,
+    ),
+    nextPageToken="",
+    prevPageToken="",
 )
 
 

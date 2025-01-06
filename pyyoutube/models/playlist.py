@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from ..utils.serializable import Serializable
-from .common import BaseList, BaseResource, Localized, Player, Thumbnails
+from .common import BaseList, BaseResource, Localized, PaginationResponse, Player, Thumbnails
 from .mixins import DatetimeTimeMixin
 
 
@@ -59,7 +59,7 @@ class Playlist(BaseResource):
 
 
 @dataclass
-class PlaylistListResponse(BaseList):
+class PlaylistListResponse(BaseList, PaginationResponse):
     """A class representing the playlist's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/playlists/list#response_1

@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 
 from ..utils.serializable import Serializable
-from .common import BaseList, BaseResource
+from .common import BaseList, BaseResource, PaginationResponse
 
 
 @dataclass
@@ -39,7 +39,7 @@ class VideoAbuseReportReason(BaseResource):
 
 
 @dataclass
-class VideoAbuseReportReasonListResponse(BaseList):
+class VideoAbuseReportReasonListResponse(BaseList, PaginationResponse):
     """A class representing the I18n language list response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/videoAbuseReportReasons/list#response_1

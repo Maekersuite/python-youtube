@@ -9,6 +9,7 @@ from .common import (
     BaseResource,
     BaseTopicDetails,
     Localized,
+    PaginationResponse,
     Thumbnails,
 )
 from .mixins import DatetimeTimeMixin
@@ -171,7 +172,7 @@ class Channel(BaseResource):
 
 
 @dataclass
-class ChannelListResponse(BaseList):
+class ChannelListResponse(BaseList, PaginationResponse):
     """A class representing the channel's retrieve response info.
 
     References: https://developers.google.com/youtube/v3/docs/channels/list#response

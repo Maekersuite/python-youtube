@@ -5,7 +5,7 @@ from typing import Optional
 
 from ..utils.serializable import Serializable
 from .comment import Comment
-from .common import BaseList, BaseResource
+from .common import BaseList, BaseResource, PaginationResponse
 
 
 @dataclass
@@ -45,7 +45,7 @@ class CommentThread(BaseResource):
 
 
 @dataclass
-class CommentThreadListResponse(BaseList):
+class CommentThreadListResponse(BaseList, PaginationResponse):
     """A class representing the comment thread's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/commentThreads/list#response_1

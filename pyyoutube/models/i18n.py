@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from ..utils.serializable import Serializable
-from .common import BaseList, BaseResource
+from .common import BaseList, BaseResource, PaginationResponse
 
 
 @dataclass
@@ -60,7 +60,7 @@ class I18nLanguage(BaseResource):
 
 
 @dataclass
-class I18nLanguageListResponse(BaseList):
+class I18nLanguageListResponse(BaseList, PaginationResponse):
     """A class representing the I18n language list response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/i18nLanguages/list#response_1

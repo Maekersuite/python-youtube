@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from ..utils.serializable import Serializable
-from .common import BaseList, BaseResource
+from .common import BaseList, BaseResource, PaginationResponse
 from .mixins import DatetimeTimeMixin
 
 
@@ -53,7 +53,7 @@ class Comment(BaseResource):
 
 
 @dataclass
-class CommentListResponse(BaseList):
+class CommentListResponse(BaseList, PaginationResponse):
     """A class representing the comment's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/comments/list#response_1

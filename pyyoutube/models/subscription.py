@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from ..utils.serializable import Serializable
-from .common import BaseList, BaseResource, ResourceId, Thumbnails
+from .common import BaseList, BaseResource, PaginationResponse, ResourceId, Thumbnails
 from .mixins import DatetimeTimeMixin
 
 
@@ -62,7 +62,7 @@ class Subscription(BaseResource):
 
 
 @dataclass
-class SubscriptionListResponse(BaseList):
+class SubscriptionListResponse(BaseList, PaginationResponse):
     """A class representing the subscription's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/subscriptions/list#response_1

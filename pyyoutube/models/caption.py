@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from ..utils.serializable import Serializable
-from .common import BaseList, BaseResource
+from .common import BaseList, BaseResource, PaginationResponse
 from .mixins import DatetimeTimeMixin
 
 
@@ -41,7 +41,7 @@ class Caption(BaseResource):
 
 
 @dataclass
-class CaptionListResponse(BaseList):
+class CaptionListResponse(BaseList, PaginationResponse):
     """A class representing the activity response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/captions/list?#response_1

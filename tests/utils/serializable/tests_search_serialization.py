@@ -1,6 +1,7 @@
 import pytest
 
 from pyyoutube.models import SearchListResponse, SearchResult, SearchResultId, SearchResultSnippet
+from pyyoutube.models.common import PageInfo
 
 test = SearchListResponse(
     kind="youtube#searchListResponse",
@@ -25,6 +26,12 @@ test = SearchListResponse(
             snippet=SearchResultSnippet(title="Test Title", description="Test Description"),
         ),
     ],
+    pageInfo=PageInfo(
+        totalResults=1,
+        resultsPerPage=1,
+    ),
+    nextPageToken="",
+    prevPageToken="",
 )
 
 

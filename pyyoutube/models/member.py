@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from ..utils.serializable import Serializable
-from .common import BaseList
+from .common import BaseList, PaginationResponse
 from .mixins import DatetimeTimeMixin
 
 
@@ -77,7 +77,7 @@ class Member(Serializable):
 
 
 @dataclass
-class MemberListResponse(BaseList):
+class MemberListResponse(BaseList, PaginationResponse):
     """A class representing the member's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/members/list#response

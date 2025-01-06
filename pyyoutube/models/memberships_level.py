@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from ..utils.serializable import Serializable
-from .common import BaseList, BaseResource
+from .common import BaseList, BaseResource, PaginationResponse
 
 
 @dataclass
@@ -34,7 +34,7 @@ class MembershipsLevel(BaseResource):
 
 
 @dataclass
-class MembershipsLevelListResponse(BaseList):
+class MembershipsLevelListResponse(BaseList, PaginationResponse):
     """A class representing the memberships level's retrieve response info.
 
     Refer: https://developers.google.com/youtube/v3/docs/membershipsLevels/list#response
